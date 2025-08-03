@@ -1,5 +1,5 @@
 import { TokenType } from '@prisma/client';
-import { JwtSecretInterface } from '../../../jwt-config/interfaces/jwt-secret.interface';
+import { JwtSecretInterface } from '../../../jwt-manager/interface/jwt-secret.interface';
 
 export interface UserTokenDecodeInputInterface {
   token: string;

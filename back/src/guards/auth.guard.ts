@@ -10,7 +10,7 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { UserTokenService } from '../user-token/user-token.service';
 import { TokenType } from '@prisma/client';
 import { TOKEN_TYPE } from 'src/decorators/token-type.decorator';
-import { JwtSecretInterface } from 'src/jwt-config/interfaces/jwt-secret.interface';
+import { JwtSecretInterface } from 'src/jwt-manager/interface/jwt-secret.interface';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

@@ -8,37 +8,35 @@ import {
   Delete,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRoles, UserStatus } from '@prisma/client';
-import { Public } from 'src/decorators/public.decorator';
+
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
-  }
+  // @Get()
+  // async findAll() {
+  //   return await this.userService.findAll();
+  // }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOneById(+id);
-  }
+  // @Get(':id')
+  // async findOne(@Param('id') id: string) {
+  //   return await this.userService.findOneById(+id);
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
+  // @Patch(':id')
+  // async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  //   return await this.userService.update(+id, updateUserDto);
+  // }
 
-  @Patch(':id')
-  updateEmail(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
+  // @Patch(':id')
+  // async updateEmail(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  //   return await this.userService.update(+id, updateUserDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
-  }
+  // @Delete(':id')
+  // async remove(@Param('id') id: string) {
+  //   return await this.userService.remove(+id);
+  // }
 }

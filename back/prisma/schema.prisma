@@ -25,7 +25,7 @@ datasource db {
   }
 
 
-  enum TokenType {
+  enum PrismaTokenType {
     REFRESH
     FORGOT_PASSWORD
     CONFIRM_ACCOUNT
@@ -50,6 +50,7 @@ datasource db {
 
 
 model User {
+    @@map("user")
     id              Int                @id @default(autoincrement())
     email           String             @unique 
     status          UserStatus             @default(ALLOWED)
@@ -61,9 +62,10 @@ model User {
   }
 
 model UserToken {
+    @@map("user_token")
     id              Int                @id @default(autoincrement())
     token           String             @db.Text
-    type            TokenType
+    type            PrismaTokenType
     expiresIn       DateTime
     uuid            String?             @unique
     createdAt       DateTime           @default(now())
@@ -74,6 +76,7 @@ model UserToken {
 
 
 model PersonalInfo {
+    @@map("personnal_info")
     id            Int   @id @default(autoincrement())
     lastName      String   
     firstName     String   
@@ -88,7 +91,7 @@ model PersonalInfo {
 
 
 model File {
-
+  @@map("file")
   id            Int   @id @default(autoincrement())
   name          String
   type          FileType
@@ -102,7 +105,7 @@ model File {
 
 
 model Address {
-
+  @@map("address")
   id            Int   @id @default(autoincrement())
   street        String
   city          String
@@ -112,7 +115,6 @@ model Address {
   updatedAt     DateTime? @updatedAt
   tableName     TableNameTypeForFile
   tableId       Int
-
 }
 
 

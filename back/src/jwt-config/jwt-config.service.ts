@@ -3,8 +3,8 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { JwtSecretInterface } from './interfaces/jwt-secret.interface';
-import { JwtExpirationInterface } from './interfaces/jwt-expiration.interface';
+import { JwtSecretInterface } from '../jwt-manager/interface/jwt-secret.interface';
+import { JwtExpirationInterface } from '../jwt-manager/interface/jwt-expiration.interface';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -34,23 +34,6 @@ export class JwtConfigService {
     };
   }
 
-  getSecret(type: keyof JwtSecretInterface) {
-    const value = this.secrets[type];
-    if (!value)
-      throw new InternalServerErrorException(
-        `Wrong value for secret key for ${type} doesn't exist`,
-      );
-    return value;
-  }
-
-  getExpiration(type: keyof JwtExpirationInterface) {
-    const value = this.expirations[type];
-    if (!value)
-      throw new InternalServerErrorException(
-        `Key  ${type} doesn't exist in expiration`,
-      );
-    return value;
-  }
 
   private __getEnvVariableOrFail(key: string): string {
     const envVariable = this.config.get(key);

@@ -1,6 +1,6 @@
 import { TokenType } from '@prisma/client';
-import { JwtSecretInterface } from '../../../jwt-config/interfaces/jwt-secret.interface';
-import { JwtExpirationInterface } from '../../../jwt-config/interfaces/jwt-expiration.interface';
+import { JwtSecretInterface } from '../../../jwt-manager/interface/jwt-secret.interface';
+import { JwtExpirationInterface } from '../../../jwt-manager/interface/jwt-expiration.interface';
 import { JwtPayloadInterface } from '../../../jwt-config/interfaces/jwt-payload.interface';
 
 export interface UserTokenGenerateInputInterface {

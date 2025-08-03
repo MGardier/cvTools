@@ -34,6 +34,7 @@ export class EmailService {
   }
 
   private async __sendToMsEmail(payload: Record<string, any>) {
+    return 
     try {
       return await firstValueFrom(
         await this.natsClient.send('email.send', payload),

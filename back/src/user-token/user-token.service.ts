@@ -1,58 +1,50 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, UserToken } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserTokenDecodeInputInterface } from './interfaces/decode/user-token-decode-input.interface';
 import { UserTokenDecodeOutputInterface } from './interfaces/decode/user-token-decode-output.interface';
 import { JwtManagerService } from '../jwt-manager/jwt-manager.service';
-import { UserTokenGenerateInputInterface } from './interfaces/generate/user-token-generate-input.interface';
+import { v4 as uuidv4 } from 'uuid';
+import { TokenType } from './enum/token-type.enum';
+import { UserTokenRepository } from './user-token.repository';
 
 @Injectable()
 export class UserTokenService {
   constructor(
     private readonly jwtManagerService: JwtManagerService,
-    private readonly prismaService: PrismaService,
-  ) {}
+    private readonly userTokenRepository: UserTokenRepository,
+  ) { }
 
-  async remove(
-    id: number,
-    select?: Prisma.UserTokenSelect,
-  ): Promise<UserToken | Pick<UserToken, 'id'>> {
-    try {
-      return await this.prismaService.userToken.delete({
-        select: select ?? { id: true, type: true, uuid: true },
-        where: {
-          id,
-        },
-      });
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException(
-          `UserToken with Id :  ${id}  was not found`,
-        );
-      }
-      throw error;
-    }
+
+
+  async generate(userId: number, email: string, type: TokenType): Promise<string> {
+    let uuid: string = this.__createUuid();
+
+    const {token} =  await this.jwtManagerService.generate(userId, email, type);
+
+    return token;
+
+
   }
 
-  async generate(settings: UserTokenGenerateInputInterface): Promise<string> {
-    const uuid = settings.payload.uuid;
 
-    const { token, expiresIn } = await this.jwtManagerService.generate(
-      settings.payload,
-      settings.secretKey,
-      settings.expiresKey,
+    async generateAndSave(userId: number, email: string, type: TokenType): Promise<string> {
+    let uuid: string = this.__createUuid();
+
+    const { token, expiresIn } = await this.jwtManagerService.generate(userId, email, type);
+
+    await this.userTokenRepository.create(
+      token,
+      type,
+      this.__convertExpiresToDate(expiresIn),
+      userId,
+      uuid,
+      ['id']
     );
-    if (settings.type)
-      await this.__create({
-        token,
-        type: settings.type,
-        expiresIn: this.__convertExpiresToDate(expiresIn),
-        user: { connect: { id: +settings.payload.sub } },
-        ...(uuid ? { uuid } : {}),
-      });
 
     return token;
   }
+
+
 
   async decode(
     settings: UserTokenDecodeInputInterface,
@@ -71,26 +63,21 @@ export class UserTokenService {
 
   /********************************************* PRIVATE FUNCTION *********************************************/
 
-  private async __create(
-    data: Prisma.UserTokenCreateInput,
-    select?: Prisma.UserTokenSelect,
-  ): Promise<UserToken> {
-    return await this.prismaService.userToken.create({
-      select: select ?? { id: true },
-      data,
-    });
-  }
 
-  private async __findByUuid(uuid: string): Promise<UserToken | null> {
-    return await this.prismaService.userToken.findUnique({
-      where: {
-        uuid,
-      },
-    });
+  private __createUuid(): string {
+    return uuidv4();
   }
 
   //Déplacer dans utils
   private __convertExpiresToDate(expiresIn: number): Date {
     return new Date(new Date().getTime() + expiresIn * 1000);
   }
+
+
+
+  //Refacto du jwtconfig et manager ainsi que pour récuperer les différents expires ou secret + trhow une erreur si pas définis lors du démarrage du serveur.
+
 }
+
+
+

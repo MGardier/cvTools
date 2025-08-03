@@ -1,0 +1,20 @@
+import { PrismaTokenType } from "@prisma/client";
+import { TokenType } from "src/user-token/enum/token-type.enum";
+
+export abstract class UtilEntity {
+
+    static getSelectedColumns<T>(columns?: (keyof T)[]): Record<keyof T, boolean> | undefined {
+
+        const select = columns?.reduce((acc, column) => {
+            acc[column] = true;
+            return acc;
+        }, {} as Record<keyof T, boolean>);
+
+        return select;
+    }
+
+
+
+
+
+}
