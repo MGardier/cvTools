@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+  enum UserStatus {
+    ALLOWED
+    PENDING
+    BANNED
+  }
+
+  enum UserRoles {
+    ADMIN
+    USER
+  }
+
+
+  enum TokenType {
+    REFRESH
+    FORGOT_PASSWORD
+    CONFIRM_ACCOUNT
+    GOOGLE
+    GITHUB
+  }
+
+  enum Civility {
+    MISS
+    MISTER
+    NOT_SPECIFY
+  }
+
+  enum  FileType {
+      AVATAR
+  }
+
+  enum TableNameTypeForFile {
+    PERSONALINFO
+
+  }
+
+
+model User {
+    id              Int                @id @default(autoincrement())
+    email           String             @unique 
+    status          UserStatus             @default(ALLOWED)
+    password        String?             
+    createdAt       DateTime           @default(now())
+    updatedAt       DateTime?          @updatedAt
+    roles           UserRoles        
+    tokens          UserToken[] 
+  }
+
+model UserToken {
+    id              Int                @id @default(autoincrement())
+    token           String             @db.Text
+    type            TokenType
+    expiresIn       DateTime
+    uuid            String?             @unique
+    createdAt       DateTime           @default(now())
+    userId          Int
+    user  User @relation(fields: [userId], references: [id])
+  }
+
+
+
+model PersonalInfo {
+    id            Int   @id @default(autoincrement())
+    lastName      String   
+    firstName     String   
+    civility      Civility @default(NOT_SPECIFY)
+    phone         String?  
+    description   String?    @db.VarChar(250)
+    createdAt     DateTime @default(now()) 
+    updatedAt     DateTime? @updatedAt
+
+}
+
+
+
+model File {
+
+  id            Int   @id @default(autoincrement())
+  name          String
+  type          FileType
+  msId          Int
+  createdAt     DateTime @default(now()) 
+  tableName     TableNameTypeForFile
+  tableId       Int
+
+}
+
+
+
+model Address {
+
+  id            Int   @id @default(autoincrement())
+  street        String
+  city          String
+  postalCode    Int
+  departement   String
+  createdAt     DateTime @default(now()) 
+  updatedAt     DateTime? @updatedAt
+  tableName     TableNameTypeForFile
+  tableId       Int
+
+}
+
+
