@@ -8,9 +8,10 @@ import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { UserTokenService } from '../user-token/user-token.service';
-import { TokenType } from '@prisma/client';
+
 import { TOKEN_TYPE } from 'src/decorators/token-type.decorator';
 import { JwtSecretInterface } from 'src/jwt-manager/interface/jwt-secret.interface';
+import { TokenType } from 'src/user-token/enum/token-type.enum';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -19,6 +20,7 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
 
+  //TODO: A faire
   async canActivate(context: ExecutionContext): Promise<any> {
     if (this.__IsPublicRoute(context)) return true;
 
@@ -40,10 +42,10 @@ export class AuthGuard implements CanActivate {
     // }
   }
 
-  private __extractToken(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-  }
+  // private __extractToken(request: Request): string | undefined {
+  //   const [type, token] = request.headers.authorization?.split(' ') ?? [];
+  //   return type === 'Bearer' ? token : undefined;
+  // }
 
   private __IsPublicRoute(context: ExecutionContext) {
     return this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -52,25 +54,25 @@ export class AuthGuard implements CanActivate {
     ]);
   }
 
-  private __getTokenType(context: ExecutionContext) {
-    return this.reflector.getAllAndOverride<keyof JwtSecretInterface>(
-      TOKEN_TYPE,
-      [context.getHandler(), context.getClass()],
-    );
-  }
+  // private __getTokenType(context: ExecutionContext) {
+  //   return this.reflector.getAllAndOverride<keyof JwtSecretInterface>(
+  //     TOKEN_TYPE,
+  //     [context.getHandler(), context.getClass()],
+  //   );
+  // }
 
-  private async __validateTokenByType(
-    token: string,
-    type: keyof JwtSecretInterface,
-  ) {
-    const config = {
-      ACCESS: { secretKey: 'ACCESS' },
-      REFRESH: { secretKey: 'REFRESH', type: TokenType.REFRESH },
-    };
+  // private async __validateTokenByType(
+  //   token: string,
+  //   type: keyof JwtSecretInterface,
+  // ) {
+  //   const config = {
+  //     ACCESS: { secretKey: 'ACCESS' },
+  //     REFRESH: { secretKey: 'REFRESH', type: TokenType.REFRESH },
+  //   };
 
-    return await this.userTokenService.decode({
-      token,
-      ...config[type],
-    });
-  }
+  //   return await this.userTokenService.decode({
+  //     token,
+  //     ...config[type],
+  //   });
+  // }
 }

@@ -59,7 +59,7 @@ export class UserTokenRepository {
 
 
 
-
+/********************************************* PRIVATE METHOD *********************************************************************************************** */
 
 
   // private async __findByUuid(uuid: string): Promise<UserToken | null> {

@@ -1,7 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { UserTokenDecodeInputInterface } from './interfaces/decode/user-token-decode-input.interface';
-import { UserTokenDecodeOutputInterface } from './interfaces/decode/user-token-decode-output.interface';
+import { Injectable } from '@nestjs/common';
+
 import { JwtManagerService } from '../jwt-manager/jwt-manager.service';
 import { v4 as uuidv4 } from 'uuid';
 import { TokenType } from './enum/token-type.enum';
@@ -15,21 +13,16 @@ export class UserTokenService {
   ) { }
 
 
-
   async generate(userId: number, email: string, type: TokenType): Promise<string> {
-    let uuid: string = this.__createUuid();
 
     const {token} =  await this.jwtManagerService.generate(userId, email, type);
-
     return token;
-
 
   }
 
 
     async generateAndSave(userId: number, email: string, type: TokenType): Promise<string> {
     let uuid: string = this.__createUuid();
-
     const { token, expiresIn } = await this.jwtManagerService.generate(userId, email, type);
 
     await this.userTokenRepository.create(
@@ -40,26 +33,27 @@ export class UserTokenService {
       uuid,
       ['id']
     );
-
+    
     return token;
   }
 
 
+  //TODO : comparer le token avec celui en base
 
-  async decode(
-    settings: UserTokenDecodeInputInterface,
-  ): Promise<UserTokenDecodeOutputInterface> {
-    let userToken;
-    const payload = await this.jwtManagerService.verify(
-      settings.token,
-      settings.secretKey,
-    );
+  // async decode(
+  //   token: string, type: TokenType,
+  // ): Promise<UserTokenDecodeOutputInterface> {
+  //   let userToken;
+  //   const payload = await this.jwtManagerService.verify(
+  //     token,
+  //     type,
+  //   );
 
-    if (settings.type && payload.uuid)
-      userToken = await this.__findByUuid(payload.uuid);
+  //   if (settings.type && payload.uuid)
+  //     userToken = await this.__findByUuid(payload.uuid);
 
-    return userToken ? { userToken, payload } : { payload };
-  }
+  //   return userToken ? { userToken, payload } : { payload };
+  // }
 
   /********************************************* PRIVATE FUNCTION *********************************************/
 

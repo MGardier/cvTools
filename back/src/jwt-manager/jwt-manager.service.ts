@@ -1,12 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { JwtConfigService } from '../jwt-config/jwt-config.service';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayloadInterface } from '../jwt-config/interfaces/jwt-payload.interface';
-import { JwtExpirationInterface } from './interface/jwt-expiration.interface';
-import { JwtSecretInterface } from './interface/jwt-secret.interface';
-import { JwtManagerGenerateOutputInterface } from './interface/jwt-manager-generate-output.interface';
-import { TokenType } from '@prisma/client';
+
 import { ConfigService } from '@nestjs/config';
+import { TokenType } from 'src/user-token/enum/token-type.enum';
+import { GenerateJwtOutputInterface } from './interface/generate-jwt-output.interface';
+import { PayloadJwtInterface } from './interface/payload-jwt.interface';
 
 @Injectable()
 export class JwtManagerService {
@@ -16,17 +14,19 @@ export class JwtManagerService {
   ) { }
 
   //TODO: renvoyer une erreur lors du démarrage du serveur si les secret et expiration pas définis
+  //TODO: Gérer les typages d'interfaces et de retour 
   async generate(
-    userId : number, 
-    email:string,
-    type: TokenType
-    ,uuid ?: string
-  ): Promise<JwtManagerGenerateOutputInterface> {
+    userId: number,
+    email: string,
+    type: TokenType,
+    uuid?: string
+  ): Promise<GenerateJwtOutputInterface> {
     const expiresIn = this.__getExpiration(type);
     const token = await this.jwtService.signAsync({
       sub: userId,
       email,
-      
+      ...(uuid ? { uuid } : {}),
+
     }, {
       secret: this.__getSecret(type),
       expiresIn,
@@ -37,42 +37,41 @@ export class JwtManagerService {
   async verify(
     token: string,
     type: TokenType,
-  ): Promise<JwtPayloadInterface> {
+  ): Promise<PayloadJwtInterface> {
     return await this.jwtService.verifyAsync(token, {
       secret: this.__getSecret(type),
     });
   }
 
 
- 
-    private __getSecret(type: TokenType) {
+  /********************************************* PRIVATE METHOD *********************************************************************************************** */
 
+  
+
+  private __getSecret(type: TokenType): string {
     switch (type) {
       case TokenType.FORGOT_PASSWORD:
-        return this.configService.get('JWT_FORGOT_PASSWORD_SECRET'); 
+        return this.configService.get('JWT_FORGOT_PASSWORD_SECRET') as string ;
       case TokenType.REFRESH:
-        return this.configService.get('JWT_REFRESH_SECRET');
+        return this.configService.get('JWT_REFRESH_SECRET') as string ;
       case TokenType.CONFIRM_ACCOUNT:
       default:
-        return this.configService.get('JWT_DEFAULT_SECRET');
+        return this.configService.get('JWT_DEFAULT_SECRET') as string;
     }
 
   }
 
-  
 
-
-  private __getExpiration(type: TokenType) {
-
+  private __getExpiration(type: TokenType): number {
     switch (type) {
       case TokenType.CONFIRM_ACCOUNT:
-        return this.configService.get('JWT_CONFIRMATION_ACCOUNT_EXPIRATION');
+        return this.configService.get('JWT_CONFIRMATION_ACCOUNT_EXPIRATION') as number ;
       case TokenType.FORGOT_PASSWORD:
-        return this.configService.get('JWT_FORGOT_PASSWORD_EXPIRATION'); 
+        return this.configService.get('JWT_FORGOT_PASSWORD_EXPIRATION') as number ;
       case TokenType.REFRESH:
-        return this.configService.get('JWT_REFRESH_EXPIRATION');
+        return this.configService.get('JWT_REFRESH_EXPIRATION') as number ;
       default:
-        return this.configService.get('JWT_ACCESS_EXPIRATION');
+        return this.configService.get('JWT_ACCESS_EXPIRATION') as number ;
     }
 
   }

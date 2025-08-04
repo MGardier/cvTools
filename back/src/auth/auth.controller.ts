@@ -29,6 +29,7 @@ export class AuthController {
   ) {
     
     //Pas oublier la gestion des erreurs 
+    console.info("controller")
      return  await this.authService.signUp(signUpDto);
 
     

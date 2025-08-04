@@ -1,33 +1,19 @@
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
-  UnauthorizedException,
+
 } from '@nestjs/common';
-import {
-  User,
-  UserRoles,
-  UserStatus,
-  UserToken,
-} from '@prisma/client';
+
 
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
 import { UserTokenService } from '../user-token/user-token.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '@nestjs/config';
-import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { SignInDto } from './dto/sign-in.dto';
 
-import { SendConfirmAccountInputInterface } from './interfaces/send-confirm-account-input.interface';
-import { ConfirmAccountDto } from './dto/confirm-account.dto';
-import { ErrorCodeEnum } from 'src/enums/error-codes.enum';
-import { SendConfirmAccountOutputInterface } from './interfaces/send-confirm-account-output.interface';
-import { SignUpOutputInterface } from './interfaces/sign-up-output.interface';
-import { SignInOutputInterface } from './interfaces/sign-in-output.interface';
+
 import { TokenType } from 'src/user-token/enum/token-type.enum';
 
 @Injectable()
@@ -232,7 +218,9 @@ export class AuthService {
   //   return user;
   // }
 
-  /* ---------------------   UTILS FUNCTIONS ---------------------------------------------------------- */
+
+
+/********************************************* PRIVATE METHOD *********************************************************************************************** */
 
   private async __hashPassword(password: string) {
     const saltRound = Number(this.configService.get('HASH_SALT_ROUND')) || 12;
