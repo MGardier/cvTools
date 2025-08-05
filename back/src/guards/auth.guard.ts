@@ -9,10 +9,6 @@ import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { UserTokenService } from '../user-token/user-token.service';
 
-import { TOKEN_TYPE } from 'src/decorators/token-type.decorator';
-import { JwtSecretInterface } from 'src/jwt-manager/interface/jwt-secret.interface';
-import { TokenType } from 'src/user-token/enum/token-type.enum';
-
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(

@@ -9,6 +9,9 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from '../auth/dto/sign-up.dto';
 
 import { Public } from '../decorators/public.decorator';
+import { User } from '@prisma/client';
+import { SignInDto } from './dto/sign-in.dto';
+import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
 
 
 
@@ -26,25 +29,25 @@ export class AuthController {
   @Post('signUp')
   async signUp(
     @Body() signUpDto: SignUpDto,
-  ) {
+  ) : Promise<Pick<User,"id" | 'email'>> {
     
-    //Pas oublier la gestion des erreurs 
-    console.info("controller")
-     return  await this.authService.signUp(signUpDto);
+     return  await this.authService.signUp(signUpDto,{
+      userSelectedColumn :["id","email"],
+      userTokenSelectedColumn : ["id"]
+     });
 
     
   }
 
 
-  // @Public()
-  // @Post('signIn')
-  // async signIn(
-  //   @Body() signInDto: SignInDto,
-  // ): Promise<ResponseInterface<SignInOutputInterface>> {
-  //   const data = await this.authService.signIn(signInDto);
+  @Public()
+  @Post('signIn')
+  async signIn(
+    @Body() signInDto: SignInDto,
+  ): Promise<SignInOutputInterface> {
+    return await this.authService.signIn(signInDto);
 
-  //   return this.responseService.format(data);
-  // }
+  }
 
   // @TokenType('REFRESH')
   // @Delete('logout')

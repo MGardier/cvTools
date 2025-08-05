@@ -10,13 +10,18 @@ export class UserService {
 
   async create(
     data: SignUpDto,
+    selectedColumn ?:(keyof User)[]
   ): Promise<User> {
-    return await this.userRepository.create(data, ["id", "email"])
+    
+    return await this.userRepository.create(data, selectedColumn)
   }
 
-  // async findAll(): Promise<User[]> {
-  //   return await this.prismaService.user.findMany();
-  // }
+  /***************************************** FIND   ***************************************************************************************/
+  
+
+  async findAll( selectedColumns?: (keyof User)[]): Promise<User[]> {
+    return await this.userRepository.findAll(selectedColumns);
+  }
 
   async findOneById(
     id: number,
@@ -38,11 +43,13 @@ export class UserService {
   //   data: Prisma.UserUpdateInput,
   //   select?: Prisma.UserSelect,
   // ): Promise<User> {
-  //   return await this.prismaService.user.update({
+
+  //   return await this..update({
   //     select: select ?? { id: true, email: true },
   //     where: { id },
   //     data,
   //   });
+
   // }
 
   // async remove(id: number, select?: Prisma.UserSelect): Promise<User> {

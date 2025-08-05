@@ -1,6 +1,7 @@
-// config/env.validation.ts
+
 import { envSchema, EnvConfig } from './env.schema';
 
+//TODO : changer le console.log()
 export function validateEnv(): EnvConfig {
   const result = envSchema.safeParse(process.env);
   

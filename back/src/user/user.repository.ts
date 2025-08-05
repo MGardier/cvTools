@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { PrismaService } from '../../prisma/prisma.service';
 import { User, UserRoles, UserStatus } from "@prisma/client";
-import { UtilEntity } from "src/utils/UtilEntity";
+
 import { SignUpDto } from "src/auth/dto/sign-up.dto";
+import { UtilRepository } from "src/shared/utils/UtilRepository";
 
 @Injectable()
 export class UserRepository {
@@ -13,8 +14,7 @@ export class UserRepository {
     data: SignUpDto,
     selectedColumns?: (keyof User)[],
   ): Promise<User> {
-    const select: Record<keyof User, boolean> | undefined = UtilEntity.getSelectedColumns<User>(selectedColumns);
-    try {
+    const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
       return await this.prismaService.user.create({
         select,
         data: {
@@ -23,28 +23,45 @@ export class UserRepository {
           status: UserStatus.PENDING,
         }
       });
-    }
-    catch (e) {
-      throw this.__handlePrismaError(e);
-    }
-
   }
 
+
+    // async update(
+    //   id: number,
+    //   data: ,
+    //   select?: Prisma.UserSelect,
+    // ): Promise<User> {
+    //   return await this.prismaService.user.update({
+    //     select: select ?? { id: true, email: true },
+    //     where: { id },
+    //     data,
+    //   });
+
+    // }
+
   /***************************************** FIND   ***************************************************************************************/
+  
+  async findAll(
+    selectedColumns?: (keyof User)[],
+  ): Promise<User[]> {
+    const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
+      return await this.prismaService.user.findMany({
+        select,
+        
+      });
+    
+  }
+
+
   async findOneById(
     id: number,
     selectedColumns?: (keyof User)[],
   ): Promise<User | null> {
-    const select: Record<keyof User, boolean> | undefined = UtilEntity.getSelectedColumns<User>(selectedColumns);
-    try {
+    const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
       return await this.prismaService.user.findUnique({
         select,
         where: { id },
       });
-    }
-    catch (e) {
-      throw this.__handlePrismaError(e);
-    }
 
   }
 
@@ -52,32 +69,12 @@ export class UserRepository {
     email: string,
     selectedColumns?: (keyof User)[],
   ): Promise<User | null> {
-    const select: Record<keyof User, boolean> | undefined = UtilEntity.getSelectedColumns<User>(selectedColumns);
-    try {
+    const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
       return await this.prismaService.user.findUnique({
         select,
         where: { email },
       });
-    }
-    catch (e) {
-      throw this.__handlePrismaError(e);
-    }
-  }
-
-
-  /***************************************** PRIVATE  ***************************************************************************************/
-
-  private async __handlePrismaError(error: any) {
-    switch (error.code) {
-      case 'P2002':
-        if (error.meta.target === 'user_email_key')
-          return new BadRequestException('Un compte avec cette adresse e-mail existe déjà.');
-
-        return new BadRequestException();
-
-      default:
-        return new InternalServerErrorException({ message: 'Database operation failed.' })
-    }
+    
   }
 
 }

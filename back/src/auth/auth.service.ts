@@ -15,6 +15,8 @@ import { SignUpDto } from './dto/sign-up.dto';
 
 
 import { TokenType } from 'src/user-token/enum/token-type.enum';
+import { User } from '@prisma/client';
+import { SignUpOptionsInterface } from './interfaces/sign-up-options.interface';
 
 @Injectable()
 export class AuthService {
@@ -31,17 +33,24 @@ export class AuthService {
 
   /***************************************** AUTHENTIFICATION ***************************************************************************************/
 
-  //TODO: systeme de fallback
-  //TODO: Gestion d'erreur
-  async signUp(data: SignUpDto): Promise<any> {
+
+  async signUp(data: SignUpDto, options?: SignUpOptionsInterface): Promise<Pick<User, "id" | 'email'>> {
 
     const hashedPassword = await this.__hashPassword(data.password);
 
-    const user = await this.userService.create({
-      email: data.email,
-      password: hashedPassword,
-    });
-    const token = await this.userTokenService.generate(user.id, user.email, TokenType.CONFIRM_ACCOUNT);
+    const user = await this.userService.create(
+      {
+        email: data.email,
+        password: hashedPassword,
+      },
+      options?.userSelectedColumn
+    );
+
+    const token = await this.userTokenService.generateAndSave(
+      { sub: user.id, email: user.email },
+      TokenType.CONFIRM_ACCOUNT,
+      options?.userTokenSelectedColumn
+    );
 
     await this.emailService.sendAccountConfirmationLink(
       user.email,
@@ -220,19 +229,12 @@ export class AuthService {
 
 
 
-/********************************************* PRIVATE METHOD *********************************************************************************************** */
+  /********************************************* PRIVATE METHOD *********************************************************************************************** */
 
   private async __hashPassword(password: string) {
     const saltRound = Number(this.configService.get('HASH_SALT_ROUND')) || 12;
+    return await bcrypt.hash(password, saltRound);
 
-    try {
-      return await bcrypt.hash(password, saltRound);
-    } catch (e) {
-      throw new InternalServerErrorException(
-        'Hash password failed unexpectedly in SignUp',
-      );
-    }
   }
-
 
 }

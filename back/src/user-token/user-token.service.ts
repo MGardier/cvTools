@@ -1,9 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { JwtManagerService } from '../jwt-manager/jwt-manager.service';
 import { v4 as uuidv4 } from 'uuid';
 import { TokenType } from './enum/token-type.enum';
 import { UserTokenRepository } from './user-token.repository';
+import { GenerateJwtOutputInterface } from 'src/jwt-manager/interfaces/generate-jwt-output.interface';
+import { UtilRepository } from 'src/shared/utils/UtilRepository';
+import { PayloadJwtInterface } from 'src/jwt-manager/interfaces/payload-jwt.interface';
+import { UserToken } from '@prisma/client';
+import { DecodeAndGetUserTokenOutput } from './interfaces/decode-and-get-user-token.output';
+import { UtilDate } from 'src/shared/utils/UtilDate';
+
 
 @Injectable()
 export class UserTokenService {
@@ -13,63 +20,66 @@ export class UserTokenService {
   ) { }
 
 
-  async generate(userId: number, email: string, type: TokenType): Promise<string> {
-
-    const {token} =  await this.jwtManagerService.generate(userId, email, type);
-    return token;
-
+  async generate(payload: PayloadJwtInterface, type: TokenType): Promise<GenerateJwtOutputInterface> {
+    return await this.jwtManagerService.generate(payload, type);
   }
 
 
-    async generateAndSave(userId: number, email: string, type: TokenType): Promise<string> {
+  async generateAndSave(payload: PayloadJwtInterface, type: TokenType, selectedColumn?: (keyof UserToken)[]): Promise<Partial<UserToken>> {
     let uuid: string = this.__createUuid();
-    const { token, expiresIn } = await this.jwtManagerService.generate(userId, email, type);
+    const { token, expiresIn } = await this.generate({ ...payload, uuid }, type,);
 
-    await this.userTokenRepository.create(
+    const data = {
+      token,
+      type: UtilRepository.toPrismaTokenType(type),
+      expiresIn: UtilDate.__convertExpiresToDate(expiresIn),
+      uuid
+    };
+
+    return await this.userTokenRepository.create(data,
+      payload.sub,
+      selectedColumn
+    );
+  }
+
+
+
+  async decode(
+    token: string, type: TokenType,
+  ): Promise<PayloadJwtInterface> {
+    return await this.jwtManagerService.verify(
       token,
       type,
-      this.__convertExpiresToDate(expiresIn),
-      userId,
-      uuid,
-      ['id']
     );
-    
-    return token;
   }
 
 
-  //TODO : comparer le token avec celui en base
+  async decodeAndGet(
+    token: string, type: TokenType,
+    selectedColumn?: (keyof UserToken)[]
+  ): Promise<DecodeAndGetUserTokenOutput> {
 
-  // async decode(
-  //   token: string, type: TokenType,
-  // ): Promise<UserTokenDecodeOutputInterface> {
-  //   let userToken;
-  //   const payload = await this.jwtManagerService.verify(
-  //     token,
-  //     type,
-  //   );
+    const payload = await this.decode(
+      token,
+      type,
+    );
+    if (!payload.uuid)
+      throw new UnauthorizedException();
+    const userToken = await this.userTokenRepository.__findByUuid(payload.uuid, selectedColumn);
 
-  //   if (settings.type && payload.uuid)
-  //     userToken = await this.__findByUuid(payload.uuid);
+    if (userToken?.token !== token)
+      throw new UnauthorizedException();
 
-  //   return userToken ? { userToken, payload } : { payload };
-  // }
+    return { userToken, payload };
+  }
+
 
   /********************************************* PRIVATE FUNCTION *********************************************/
-
 
   private __createUuid(): string {
     return uuidv4();
   }
 
-  //Déplacer dans utils
-  private __convertExpiresToDate(expiresIn: number): Date {
-    return new Date(new Date().getTime() + expiresIn * 1000);
-  }
-
-
-
-  //Refacto du jwtconfig et manager ainsi que pour récuperer les différents expires ou secret + trhow une erreur si pas définis lors du démarrage du serveur.
 
 }
 

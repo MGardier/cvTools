@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './filters/httpException.filter';
+import { PrismaClientExceptionFilter } from './filters/prismaException.filter';
 
 //TODO: A faire  - Implémenter la logique de repository 
 //TODO: A faire  - Améliore le typage

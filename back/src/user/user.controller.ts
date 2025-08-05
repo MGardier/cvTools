@@ -1,14 +1,13 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Param,
+  Patch,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+
 
 
 @Controller('user')
@@ -39,4 +38,5 @@ export class UserController {
   // async remove(@Param('id') id: string) {
   //   return await this.userService.remove(+id);
   // }
+
 }
