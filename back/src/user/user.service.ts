@@ -10,31 +10,32 @@ export class UserService {
 
   async create(
     data: SignUpDto,
-    selectedColumn ?:(keyof User)[]
+    selectedColumn?: (keyof User)[]
   ): Promise<User> {
-    
+
     return await this.userRepository.create(data, selectedColumn)
   }
 
   /***************************************** FIND   ***************************************************************************************/
-  
 
-  async findAll( selectedColumns?: (keyof User)[]): Promise<User[]> {
+
+  async findAll(selectedColumns?: (keyof User)[]): Promise<Partial<User[]>> {
     return await this.userRepository.findAll(selectedColumns);
   }
 
   async findOneById(
     id: number,
     selectedColumns?: (keyof User)[],
-  ): Promise<User | null> {
+  ): Promise<Partial<User | null>> {
     return await this.userRepository.findOneById(id, selectedColumns)
   }
 
   async findOneByEmail(
     email: string,
     selectedColumns?: (keyof User)[],
-  ): Promise<User | null> {
+  ): Promise<Partial<User | null>> {
     return await this.userRepository.findOneByEmail(email, selectedColumns)
+
   }
 
 

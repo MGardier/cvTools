@@ -2,6 +2,8 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
+  UnauthorizedException,
 
 } from '@nestjs/common';
 
@@ -15,8 +17,10 @@ import { SignUpDto } from './dto/sign-up.dto';
 
 
 import { TokenType } from 'src/user-token/enum/token-type.enum';
-import { User } from '@prisma/client';
+import { User, UserStatus } from '@prisma/client';
 import { SignUpOptionsInterface } from './interfaces/sign-up-options.interface';
+import { SignInDto } from './dto/sign-in.dto';
+import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
 
 @Injectable()
 export class AuthService {
@@ -61,62 +65,61 @@ export class AuthService {
   }
 
 
-  // async sendConfirmAccount(
-  //   email: string,
-  // ): Promise<SendConfirmAccountOutputInterface> {
+  async sendConfirmAccount(
+    email: string,
+  ): Promise<boolean> {
 
-  //   const userId = await this.userService.findOneByEmail(email, ['id']);
+    
+    const user = await this.userService.findOneByEmail(email, ['id']);
+    if(!user?.id)
+      throw new NotFoundException();
 
-  //   const token = await this.userTokenService.generate(userId, email, TokenType.CONFIRM_ACCOUNT);
+    const token = await this.userTokenService.generateAndSave({sub: user.id, email}, TokenType.CONFIRM_ACCOUNT);
 
-  //   await this.emailService.sendAccountConfirmationLink(
-  //     email,
-  //     `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
-  //   );
+    await this.emailService.sendAccountConfirmationLink(
+      email,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
+    );
 
-  //   return true;
-  // }
+    return true;
+  }
 
-  // async signIn(data: SignInDto): Promise<SignInOutputInterface> {
-  //   const user = await this.userService.findOneByEmail(data.email, {
-  //     id: true,
-  //     email: true,
-  //     password: true,
-  //   });
+  async signIn(data: SignInDto): Promise<SignInOutputInterface> {
 
-  //   if (
-  //     !user ||
-  //     !user?.password ||
-  //     !(await bcrypt.compare(data.password, user.password))
-  //   )
-  //     throw new UnauthorizedException('Invalid credentials');
-  //   if (user.status === UserStatus.PENDING)
-  //     throw new UnauthorizedException('User must be valid his account');
-  //   if (user.status === UserStatus.BANNED)
-  //     throw new UnauthorizedException('User is banned and cannot login ');
+    const user = await this.userService.findOneByEmail(data.email, ['id','email','password']);
+    if (
+      !user ||
+      !user?.password ||
+      !(await bcrypt.compare(data.password, user.password))
+    )
+      throw new UnauthorizedException('Invalid credentials');
 
-  //   const accessToken = await this.userTokenService.generate({
-  //     payload: {
-  //       email: user.email,
-  //       sub: user.id,
-  //     },
-  //     expiresKey: 'ACCESS',
-  //     secretKey: 'ACCESS',
-  //   });
-  //   let uuid: string = this.__createUuid();
-  //   const refreshToken = await this.userTokenService.generate({
-  //     payload: {
-  //       email: user.email,
-  //       sub: user.id,
-  //       uuid,
-  //     },
-  //     expiresKey: 'REFRESH',
-  //     secretKey: 'REFRESH',
-  //     type: TokenType.REFRESH,
-  //   });
+    if (user.status === UserStatus.PENDING)
+      throw new UnauthorizedException('User must be valid his account');
 
-  //   return { accessToken, refreshToken };
-  // }
+    if (user.status === UserStatus.BANNED)
+      throw new UnauthorizedException('User is banned and cannot login ');
+
+    const access = await this.userTokenService.generate({
+        email: user.email!,
+        sub: user.id!,
+      },
+      TokenType.ACCESS
+    );
+
+    const refresh = await this.userTokenService.generateAndSave(
+      {
+        email: user.email!,
+        sub: user.id!,
+      },
+      TokenType.REFRESH,
+      ['token']
+    );
+    
+
+    return { accessToken: access.token, refreshToken: refresh.token!  };
+  }
+
 
   // async logout(token: string): Promise<Partial<UserToken>> {
   //   const { userToken, payload } = await this.userTokenService.decode({

@@ -1,5 +1,5 @@
 
 export interface SignInOutputInterface {
-  access: string, 
-  refresh: string,
+  accessToken: string, 
+  refreshToken: string,
 }

@@ -73,7 +73,6 @@ export class UserTokenService {
     return { userToken, payload };
   }
 
-
   /********************************************* PRIVATE FUNCTION *********************************************/
 
   private __createUuid(): string {

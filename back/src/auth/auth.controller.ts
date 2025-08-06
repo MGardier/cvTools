@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
+  InternalServerErrorException,
   Post,
   Req,
 } from '@nestjs/common';
@@ -12,6 +14,7 @@ import { Public } from '../decorators/public.decorator';
 import { User } from '@prisma/client';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
+import { ForgotPasswordDTO } from './dto/forgot-password.dto';
 
 
 
@@ -36,7 +39,6 @@ export class AuthController {
       userTokenSelectedColumn : ["id"]
      });
 
-    
   }
 
 
@@ -69,14 +71,15 @@ export class AuthController {
 
   // /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
 
-  // @Public()
-  // @Post('reSendConfirmAccount')
-  // async reSendConfirmAccount(
-  //   @Body() reSendConfirmAccountDto: ForgotPasswordDTO,
-  // ): Promise<ResponseInterface<boolean>> {
-  //   await this.authService.reSendConfirmAccount(reSendConfirmAccountDto.email);
-  //   return this.responseService.format(true);
-  // }
+  @Public()
+  @Post('sendConfirmAccount')
+  async sendConfirmAccount(
+    @Body() sendConfirmAccountDto: ForgotPasswordDTO,
+  ): Promise<boolean> {
+
+    return await this.authService.sendConfirmAccount(sendConfirmAccountDto.email);
+    
+  }
 
 
   // @Public()
