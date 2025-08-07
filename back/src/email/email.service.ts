@@ -33,6 +33,7 @@ export class EmailService {
     });
   }
 
+  //Todo : améliorer la gestion du ms 
   private async __sendToMsEmail(payload: Record<string, any>) {
     return 
     try {

@@ -21,6 +21,12 @@ import { User, UserStatus } from '@prisma/client';
 import { SignUpOptionsInterface } from './interfaces/sign-up-options.interface';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
+import { ConfirmAccountDto } from './dto/confirm-account.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+
+
+//Todo : rajouter les codes d'erreurs pour les messages 
+
 
 @Injectable()
 export class AuthService {
@@ -65,28 +71,9 @@ export class AuthService {
   }
 
 
-  async sendConfirmAccount(
-    email: string,
-  ): Promise<boolean> {
+  async signIn(data: SignInDto, options?: SignUpOptionsInterface): Promise<SignInOutputInterface> {
 
-    
-    const user = await this.userService.findOneByEmail(email, ['id']);
-    if(!user?.id)
-      throw new NotFoundException();
-
-    const token = await this.userTokenService.generateAndSave({sub: user.id, email}, TokenType.CONFIRM_ACCOUNT);
-
-    await this.emailService.sendAccountConfirmationLink(
-      email,
-      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
-    );
-
-    return true;
-  }
-
-  async signIn(data: SignInDto): Promise<SignInOutputInterface> {
-
-    const user = await this.userService.findOneByEmail(data.email, ['id','email','password']);
+    const user = await this.userService.findOneByEmail(data.email, ['id', 'email', 'password']);
     if (
       !user ||
       !user?.password ||
@@ -101,9 +88,9 @@ export class AuthService {
       throw new UnauthorizedException('User is banned and cannot login ');
 
     const access = await this.userTokenService.generate({
-        email: user.email!,
-        sub: user.id!,
-      },
+      email: user.email!,
+      sub: user.id!,
+    },
       TokenType.ACCESS
     );
 
@@ -115,120 +102,134 @@ export class AuthService {
       TokenType.REFRESH,
       ['token']
     );
-    
 
-    return { accessToken: access.token, refreshToken: refresh.token!  };
+
+    return { accessToken: access.token, refreshToken: refresh.token! };
   }
 
 
-  // async logout(token: string): Promise<Partial<UserToken>> {
-  //   const { userToken, payload } = await this.userTokenService.decode({
-  //     token,
-  //     secretKey: 'REFRESH',
-  //     type: TokenType.REFRESH,
-  //   });
-  //   if (!userToken) throw new UnauthorizedException('No token was found ');
 
-  //   const user = await this.userService.findOneById(+payload.sub);
-  //   if (!user) throw new UnauthorizedException('User was not found');
 
-  //   return await this.userTokenService.remove(userToken.id);
-  // }
 
-  // async refresh(token: string): Promise<SignInOutputInterface> {
-  //   const { userToken, payload } = await this.userTokenService.decode({
-  //     token,
-  //     secretKey: 'REFRESH',
-  //     type: TokenType.REFRESH,
-  //   });
+  async logout(token: string): Promise<boolean> {
+    const { userToken, payload } = await this.userTokenService.decodeAndGet(
+      token,
+      TokenType.REFRESH,
+    );
+    if (!userToken.id) throw new UnauthorizedException();
 
-  //   if (!userToken) throw new UnauthorizedException('No token was found ');
+    const user = await this.userService.findOneById(+payload.sub);
+    if (!user) throw new UnauthorizedException();
 
-  //   const user = await this.userService.findOneById(+payload.sub);
-  //   if (!user) throw new UnauthorizedException('User was not found');
+    await this.userTokenService.remove(userToken.id);
+    return true;
+  }
 
-  //   const { accessToken, refreshToken } = await this.__generateTokenPair(
-  //     user.email,
-  //     user.id,
-  //   );
+  async refresh(token: string): Promise<SignInOutputInterface> {
+    const { userToken, payload } = await this.userTokenService.decodeAndGet(
+      token, TokenType.REFRESH,
+    );
 
-  //   await this.userTokenService.remove(userToken.id);
-  //   return { accessToken, refreshToken };
-  // }
+    if (!userToken.id || !userToken.token) throw new UnauthorizedException();
+
+    const user = await this.userService.findOneById(+payload.sub);
+    if (!user) throw new UnauthorizedException('User was not found');
+
+
+    const accessToken = await this.userTokenService.generate(payload, TokenType.ACCESS);
+    const refreshToken = await this.userTokenService.generateAndSave(payload, TokenType.REFRESH);
+
+    await this.userTokenService.remove(userToken.id);
+    return { accessToken: accessToken.token, refreshToken: refreshToken.token! };
+  }
 
   // /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
 
-  // async reSendConfirmAccount(email: string): Promise<void> {
-  //   const user = await this.userService.findOneByEmail(email);
-  //   if (!user) return;
-  //   await this.__sendConfirmAccount({
-  //     email: user.email,
-  //     userId: user.id,
-  //     isFallback: false,
-  //   });
-  // }
 
-  // async confirmAccount(
-  //   confirmAccountDto: ConfirmAccountDto,
-  // ): Promise<Partial<User>> {
-  //   const { userToken, payload } = await this.userTokenService.decode({
-  //     token: confirmAccountDto.token,
-  //     secretKey: 'DEFAULT',
-  //     type: TokenType.CONFIRM_ACCOUNT,
-  //   });
-  //   if (!userToken)
-  //     throw new NotFoundException(
-  //       'No confirm account token was found for this user',
-  //     );
 
-  //   const user = await this.userService.update(payload.sub, {
-  //     status: UserStatus.ALLOWED,
-  //   });
+  async sendConfirmAccount(
+    email: string,
 
-  //   await this.userTokenService.remove(userToken.id);
-  //   return user;
-  // }
+  ): Promise<boolean> {
 
-  // async forgotPassword(email: string): Promise<Partial<User>> {
-  //   const user = await this.userService.findOneByEmail(email);
-  //   if (!user) throw new NotFoundException();
+    const user = await this.userService.findOneByEmail(email, ['id']);
+    if (!user?.id)
+      throw new NotFoundException();
 
-  //   let uuid: string = this.__createUuid();
+    const token = await this.userTokenService.generateAndSave({ sub: user.id, email }, TokenType.CONFIRM_ACCOUNT);
 
-  //   const token = await this.userTokenService.generate({
-  //     payload: {
-  //       email: user.email,
-  //       sub: user.id,
-  //       uuid,
-  //     },
-  //     expiresKey: 'FORGOT_PASSWORD',
-  //     secretKey: 'FORGOT_PASSWORD',
-  //     type: TokenType.FORGOT_PASSWORD,
-  //   });
+    await this.emailService.sendAccountConfirmationLink(
+      email,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
+    );
 
-  //   await this.emailService.sendResetPasswordLink(
-  //     user.email,
-  //     `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${token}`,
-  //   );
+    return true;
+  }
 
-  //   return user;
-  // }
 
-  // async resetPassword(data: ResetPasswordDto): Promise<Partial<User>> {
-  //   const { userToken, payload } = await this.userTokenService.decode({
-  //     token: data.token,
-  //     secretKey: 'FORGOT_PASSWORD',
-  //     type: TokenType.FORGOT_PASSWORD,
-  //   });
-  //   if (!userToken) throw new NotFoundException('Token was not found ');
-  //   const hashedPassword = await this.__hashPassword(data.password);
-  //   const user = await this.userService.update(payload.sub, {
-  //     password: hashedPassword,
-  //   });
-  //   if (!user) throw new NotFoundException('User was not found ');
-  //   await this.userTokenService.remove(userToken.id);
-  //   return user;
-  // }
+
+
+  async confirmAccount(
+    confirmAccountDto: ConfirmAccountDto,
+    selectedColumn?: (keyof User)[]
+  ): Promise<Partial<User>> {
+    const { userToken, payload } = await this.userTokenService.decodeAndGet(
+      confirmAccountDto.token,
+      TokenType.CONFIRM_ACCOUNT,
+      ['id']
+    );
+    if (!userToken.id || !payload.sub)
+      throw new NotFoundException();
+
+    const user = await this.userService.update(payload.sub, {
+      status: UserStatus.ALLOWED,
+    }, selectedColumn);
+
+    await this.userTokenService.remove(userToken.id);
+    return user!;
+  }
+
+  async forgotPassword(email: string, selectedColumns?: (keyof User)[]): Promise<Partial<User>> {
+    const user = await this.userService.findOneByEmail(email, selectedColumns);
+    if (!user) throw new NotFoundException();
+
+
+    const token = await this.userTokenService.generateAndSave(
+      {
+        email: user.email!,
+        sub: user.id!,
+      },
+      TokenType.FORGOT_PASSWORD,
+    );
+
+    await this.emailService.sendResetPasswordLink(
+      user.email!,
+      `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${token}`,
+    );
+
+    return user;
+  }
+
+  async resetPassword(data: ResetPasswordDto, selectedColumns?: (keyof User)[]): Promise<Partial<User>> {
+
+    const { userToken, payload } = await this.userTokenService.decodeAndGet(
+      data.token,
+      TokenType.FORGOT_PASSWORD,
+    );
+
+    if (!userToken.id) throw new NotFoundException();
+
+    const hashedPassword = await this.__hashPassword(data.password);
+
+    const user = await this.userService.update(payload.sub, {
+      password: hashedPassword,
+    }, selectedColumns);
+
+    if (!user) throw new NotFoundException('User was not found ');
+
+    await this.userTokenService.remove(userToken.id);
+    return user;
+  }
 
 
 

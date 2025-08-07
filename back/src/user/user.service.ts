@@ -3,6 +3,8 @@ import { Prisma, User } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SignUpDto } from 'src/auth/dto/sign-up.dto';
 import { UserRepository } from './user.repository';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserInterface } from './interfaces/update-user.interface';
 
 @Injectable()
 export class UserService {
@@ -14,6 +16,15 @@ export class UserService {
   ): Promise<User> {
 
     return await this.userRepository.create(data, selectedColumn)
+  }
+
+
+  async update(
+    id: number,
+    data : UpdateUserInterface,
+    selectedColumns?: (keyof User)[],
+  ): Promise<Partial<User | null>> {
+    return await this.userRepository.update(id, data, selectedColumns)
   }
 
   /***************************************** FIND   ***************************************************************************************/
@@ -39,31 +50,6 @@ export class UserService {
   }
 
 
-  // async update(
-  //   id: number,
-  //   data: Prisma.UserUpdateInput,
-  //   select?: Prisma.UserSelect,
-  // ): Promise<User> {
 
-  //   return await this..update({
-  //     select: select ?? { id: true, email: true },
-  //     where: { id },
-  //     data,
-  //   });
 
-  // }
-
-  // async remove(id: number, select?: Prisma.UserSelect): Promise<User> {
-  //   try {
-  //     return await this.prismaService.user.delete({
-  //       select: select ?? { id: true, email: true },
-  //       where: { id },
-  //     });
-  //   } catch (error) {
-  //     if (error.code === 'P2025') {
-  //       throw new NotFoundException(`User with Id :  ${id}  was not found`);
-  //     }
-  //     throw error;
-  //   }
-  // }
 }

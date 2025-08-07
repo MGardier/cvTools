@@ -12,8 +12,9 @@ import { Response, Request } from 'express';
 import { ApiResponseInterface } from 'src/shared/interfaces/api-response.interface';
 
 
-//TODO : AJouter la gestion du status code 
-//TODO : 
+//TODO : Garder le status code  existant 
+//TODO : Log request et response
+
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor {
   

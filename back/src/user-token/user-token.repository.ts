@@ -42,7 +42,7 @@ export class UserTokenRepository {
   }
 
 
-  async __findByUuid(uuid: string, selectedColumns?: (keyof UserToken)[]): Promise<Partial<UserToken> | null> {
+  async findByUuid(uuid: string, selectedColumns?: (keyof UserToken)[]): Promise<Partial<UserToken> | null> {
     const select: Record<keyof UserToken, boolean> | undefined = UtilRepository.getSelectedColumns<UserToken>(selectedColumns);
     return await this.prismaService.userToken.findUnique({
       select,

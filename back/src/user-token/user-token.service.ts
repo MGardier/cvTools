@@ -26,7 +26,7 @@ export class UserTokenService {
 
 
   async generateAndSave(payload: PayloadJwtInterface, type: TokenType, selectedColumn?: (keyof UserToken)[]): Promise<Partial<UserToken>> {
-    let uuid: string = this.__createUuid();
+    let uuid: string = uuidv4();
     const { token, expiresIn } = await this.generate({ ...payload, uuid }, type,);
 
     const data = {
@@ -65,7 +65,7 @@ export class UserTokenService {
     );
     if (!payload.uuid)
       throw new UnauthorizedException();
-    const userToken = await this.userTokenRepository.__findByUuid(payload.uuid, selectedColumn);
+    const userToken = await this.userTokenRepository.findByUuid(payload.uuid, selectedColumn);
 
     if (userToken?.token !== token)
       throw new UnauthorizedException();
@@ -73,13 +73,13 @@ export class UserTokenService {
     return { userToken, payload };
   }
 
-  /********************************************* PRIVATE FUNCTION *********************************************/
 
-  private __createUuid(): string {
-    return uuidv4();
+  async remove(
+    id: number,
+    selectedColumns?: (keyof UserToken)[],
+  ): Promise<Partial<UserToken>> {
+    return await this.userTokenRepository.remove(id,selectedColumns);
   }
-
-
 }
 
 

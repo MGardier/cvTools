@@ -4,6 +4,8 @@ import { User, UserRoles, UserStatus } from "@prisma/client";
 
 import { SignUpDto } from "src/auth/dto/sign-up.dto";
 import { UtilRepository } from "src/shared/utils/UtilRepository";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { UpdateUserInterface } from "./interfaces/update-user.interface";
 
 @Injectable()
 export class UserRepository {
@@ -15,41 +17,42 @@ export class UserRepository {
     selectedColumns?: (keyof User)[],
   ): Promise<User> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
-      return await this.prismaService.user.create({
-        select,
-        data: {
-          ...data,
-          roles: UserRoles.USER,
-          status: UserStatus.PENDING,
-        }
-      });
+    return await this.prismaService.user.create({
+      select,
+      data: {
+        ...data,
+        roles: UserRoles.USER,
+        status: UserStatus.PENDING,
+      }
+    });
   }
 
 
-    // async update(
-    //   id: number,
-    //   data: ,
-    //   select?: Prisma.UserSelect,
-    // ): Promise<User> {
-    //   return await this.prismaService.user.update({
-    //     select: select ?? { id: true, email: true },
-    //     where: { id },
-    //     data,
-    //   });
+  async update(
+    id: number,
+    data: UpdateUserInterface,
+    selectedColumns?: (keyof User)[]
+  ): Promise<User> {
+    const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
+    return await this.prismaService.user.update({
+      select,
+      where: { id },
+      data,
+    });
 
-    // }
+  }
 
   /***************************************** FIND   ***************************************************************************************/
-  
+
   async findAll(
     selectedColumns?: (keyof User)[],
   ): Promise<User[]> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
-      return await this.prismaService.user.findMany({
-        select,
-        
-      });
-    
+    return await this.prismaService.user.findMany({
+      select,
+
+    });
+
   }
 
 
@@ -58,10 +61,10 @@ export class UserRepository {
     selectedColumns?: (keyof User)[],
   ): Promise<User | null> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
-      return await this.prismaService.user.findUnique({
-        select,
-        where: { id },
-      });
+    return await this.prismaService.user.findUnique({
+      select,
+      where: { id },
+    });
 
   }
 
@@ -70,11 +73,11 @@ export class UserRepository {
     selectedColumns?: (keyof User)[],
   ): Promise<User | null> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
-      return await this.prismaService.user.findUnique({
-        select,
-        where: { email },
-      });
-    
+    return await this.prismaService.user.findUnique({
+      select,
+      where: { email },
+    });
+
   }
 
 }
