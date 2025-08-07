@@ -24,6 +24,8 @@ export class JwtManagerService {
       secret: this.__getSecret(type),
       expiresIn,
     });
+
+   
     return { token, expiresIn };
   }
 

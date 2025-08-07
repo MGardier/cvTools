@@ -26,6 +26,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 
 
 //Todo : rajouter les codes d'erreurs pour les messages 
+//Todo : Oubli de suppression des anciens tokens
 
 
 @Injectable()
@@ -115,16 +116,19 @@ export class AuthService {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       token,
       TokenType.REFRESH,
+      ['id','token']
     );
+    console.log(userToken)
     if (!userToken.id) throw new UnauthorizedException();
 
-    const user = await this.userService.findOneById(+payload.sub);
+    const user = await this.userService.findOneById(+payload.sub,['id']);
     if (!user) throw new UnauthorizedException();
 
     await this.userTokenService.remove(userToken.id);
     return true;
   }
 
+  
   async refresh(token: string): Promise<SignInOutputInterface> {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       token, TokenType.REFRESH,
@@ -133,11 +137,15 @@ export class AuthService {
     if (!userToken.id || !userToken.token) throw new UnauthorizedException();
 
     const user = await this.userService.findOneById(+payload.sub);
-    if (!user) throw new UnauthorizedException('User was not found');
+    if (!user?.id || !user?.email || !user) throw new UnauthorizedException('User was not found');
 
+    const newPayload = {
+      sub: user.id,
+      email: user.email
+    }
 
-    const accessToken = await this.userTokenService.generate(payload, TokenType.ACCESS);
-    const refreshToken = await this.userTokenService.generateAndSave(payload, TokenType.REFRESH);
+    const accessToken = await this.userTokenService.generate(newPayload, TokenType.ACCESS);
+    const refreshToken = await this.userTokenService.generateAndSave(newPayload, TokenType.REFRESH);
 
     await this.userTokenService.remove(userToken.id);
     return { accessToken: accessToken.token, refreshToken: refreshToken.token! };
@@ -149,18 +157,20 @@ export class AuthService {
 
   async sendConfirmAccount(
     email: string,
-
   ): Promise<boolean> {
 
-    const user = await this.userService.findOneByEmail(email, ['id']);
-    if (!user?.id)
+    const user = await this.userService.findOneByEmail(email, ['id', 'status']);
+    if (!user?.id || !user?.status)
       throw new NotFoundException();
 
-    const token = await this.userTokenService.generateAndSave({ sub: user.id, email }, TokenType.CONFIRM_ACCOUNT);
+    if (user.status !== UserStatus.PENDING)
+      throw new UnauthorizedException();
+
+    const userToken = await this.userTokenService.generateAndSave({ sub: user.id, email }, TokenType.CONFIRM_ACCOUNT);
 
     await this.emailService.sendAccountConfirmationLink(
       email,
-      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${userToken.token}`,
     );
 
     return true;
@@ -176,7 +186,7 @@ export class AuthService {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       confirmAccountDto.token,
       TokenType.CONFIRM_ACCOUNT,
-      ['id']
+      ['id','token']
     );
     if (!userToken.id || !payload.sub)
       throw new NotFoundException();
@@ -191,20 +201,21 @@ export class AuthService {
 
   async forgotPassword(email: string, selectedColumns?: (keyof User)[]): Promise<Partial<User>> {
     const user = await this.userService.findOneByEmail(email, selectedColumns);
-    if (!user) throw new NotFoundException();
+
+    if (!user || !user.id || !user.email) throw new NotFoundException();
 
 
-    const token = await this.userTokenService.generateAndSave(
+    const userToken = await this.userTokenService.generateAndSave(
       {
-        email: user.email!,
-        sub: user.id!,
+        email: user.email,
+        sub: user.id,
       },
       TokenType.FORGOT_PASSWORD,
     );
 
     await this.emailService.sendResetPasswordLink(
       user.email!,
-      `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${token}`,
+      `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${userToken.token}`,
     );
 
     return user;

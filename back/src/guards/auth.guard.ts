@@ -18,7 +18,6 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
 
-  //TODO: A faire
   async canActivate(context: ExecutionContext): Promise<any> {
     if (this.__IsPublicRoute(context)) return true;
 
@@ -30,7 +29,6 @@ export class AuthGuard implements CanActivate {
       const tokenType = this.__getTokenType(context);
       const { payload } = await this.userTokenService.decodeAndGet(token, tokenType);
 
-      //rédéfinir la request
       request['user'] = payload;
       if (tokenType === 'REFRESH') request['token'] = token;
 

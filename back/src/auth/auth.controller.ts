@@ -97,7 +97,7 @@ export class AuthController {
   async forgotPassword(
     @Body() forgotPasswordDTO: ForgotPasswordDTO,
   ): Promise<Partial<User>> {
-    return await this.authService.forgotPassword(forgotPasswordDTO.email, ['email']);
+    return await this.authService.forgotPassword(forgotPasswordDTO.email, ['id','email']);
 
   }
 

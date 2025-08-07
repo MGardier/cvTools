@@ -28,7 +28,6 @@ export class UserTokenService {
   async generateAndSave(payload: PayloadJwtInterface, type: TokenType, selectedColumn?: (keyof UserToken)[]): Promise<Partial<UserToken>> {
     let uuid: string = uuidv4();
     const { token, expiresIn } = await this.generate({ ...payload, uuid }, type,);
-
     const data = {
       token,
       type: UtilRepository.toPrismaTokenType(type),
@@ -63,10 +62,11 @@ export class UserTokenService {
       token,
       type,
     );
+    
     if (!payload.uuid)
       throw new UnauthorizedException();
     const userToken = await this.userTokenRepository.findByUuid(payload.uuid, selectedColumn);
-
+    onsole.log(payload)
     if (userToken?.token !== token)
       throw new UnauthorizedException();
 
@@ -78,7 +78,7 @@ export class UserTokenService {
     id: number,
     selectedColumns?: (keyof UserToken)[],
   ): Promise<Partial<UserToken>> {
-    return await this.userTokenRepository.remove(id,selectedColumns);
+    return await this.userTokenRepository.remove(id, selectedColumns);
   }
 }
 
