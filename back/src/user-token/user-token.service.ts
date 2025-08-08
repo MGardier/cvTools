@@ -7,7 +7,7 @@ import { UserTokenRepository } from './user-token.repository';
 import { GenerateJwtOutputInterface } from 'src/jwt-manager/interfaces/generate-jwt-output.interface';
 import { UtilRepository } from 'src/shared/utils/UtilRepository';
 import { PayloadJwtInterface } from 'src/jwt-manager/interfaces/payload-jwt.interface';
-import { UserToken } from '@prisma/client';
+import { User, UserToken } from '@prisma/client';
 import { DecodeAndGetUserTokenOutput } from './interfaces/decode-and-get-user-token.output';
 import { UtilDate } from 'src/shared/utils/UtilDate';
 
@@ -58,6 +58,7 @@ export class UserTokenService {
     selectedColumn?: (keyof UserToken)[]
   ): Promise<DecodeAndGetUserTokenOutput> {
 
+
     const payload = await this.decode(
       token,
       type,
@@ -65,8 +66,12 @@ export class UserTokenService {
     
     if (!payload.uuid)
       throw new UnauthorizedException();
-    const userToken = await this.userTokenRepository.findByUuid(payload.uuid, selectedColumn);
-    onsole.log(payload)
+
+    const requiredColumns: (keyof UserToken)[] = ['token'];
+    const finalSelectedColumns =  UtilRepository.addColumnsToSelectedColumns<UserToken>(requiredColumns, selectedColumn)
+
+    const userToken = await this.userTokenRepository.findByUuid(payload.uuid, finalSelectedColumns);
+
     if (userToken?.token !== token)
       throw new UnauthorizedException();
 

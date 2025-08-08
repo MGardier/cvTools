@@ -1,5 +1,3 @@
-
-// interceptors/response.interceptor.ts
 import { 
   Injectable, 
   NestInterceptor, 
@@ -12,8 +10,7 @@ import { Response, Request } from 'express';
 import { ApiResponseInterface } from 'src/shared/interfaces/api-response.interface';
 
 
-//TODO : Garder le status code  existant 
-//TODO : Log request et response
+
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor {

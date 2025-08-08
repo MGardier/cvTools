@@ -1,8 +1,10 @@
 
+import { Logger } from '@nestjs/common';
 import { envSchema, EnvConfig } from './env.schema';
 
-//TODO : changer le console.log()
+
 export function validateEnv(): EnvConfig {
+  const logger = new Logger('EnvValidation')
   const result = envSchema.safeParse(process.env);
   
   if (!result.success) {
@@ -10,12 +12,12 @@ export function validateEnv(): EnvConfig {
       err => `${err.path.join('.')}: ${err.message}`
     );
     
-    console.error('❌ Environment validation failed:');
-    errorMessages.forEach(msg => console.error(`  - ${msg}`));
+    logger.error(' Environment validation failed:');
+    errorMessages.forEach(msg => logger.error(`  - ${msg}`));
     
     throw new Error('Invalid environment configuration');
   }
   
-  console.log('✅ Environment validation successful');
+  logger.log(' Environment validation successful');
   return result.data;
 }

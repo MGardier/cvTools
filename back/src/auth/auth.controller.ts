@@ -15,7 +15,7 @@ import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
 import { ForgotPasswordDTO } from './dto/forgot-password.dto';
 import { ConfirmAccountDto } from './dto/confirm-account.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import {  Token_Type } from 'src/decorators/token-type.decorator';
+import { Token_Type } from 'src/decorators/token-type.decorator';
 import { TokenType } from 'src/user-token/enum/token-type.enum';
 
 
@@ -36,11 +36,7 @@ export class AuthController {
     @Body() signUpDto: SignUpDto,
   ): Promise<Pick<User, "id" | 'email'>> {
 
-    return await this.authService.signUp(signUpDto, {
-      userSelectedColumn: ["id", "email"],
-      userTokenSelectedColumn: ["id"]
-    });
-
+    return await this.authService.signUp(signUpDto, ["id", "email"]);
   }
 
   @Public()
@@ -64,7 +60,7 @@ export class AuthController {
 
   @Token_Type(TokenType.REFRESH)
   @Post('refresh')
-  async refresh(@Req() request: Request) {
+  async refresh(@Req() request: Request) : Promise<SignInOutputInterface> {
     const token = request['token'];
     return await this.authService.refresh(token);
 
@@ -87,8 +83,8 @@ export class AuthController {
   @Post('confirmAccount')
   async confirmAccount(
     @Body() confirmAccountDto: ConfirmAccountDto,
-  ): Promise<Partial<User>> {
-    return await this.authService.confirmAccount(confirmAccountDto, ['email']);
+  ): Promise<Boolean> {
+    return await this.authService.confirmAccount(confirmAccountDto);
 
   }
 
@@ -96,8 +92,8 @@ export class AuthController {
   @Post('forgotPassword')
   async forgotPassword(
     @Body() forgotPasswordDTO: ForgotPasswordDTO,
-  ): Promise<Partial<User>> {
-    return await this.authService.forgotPassword(forgotPasswordDTO.email, ['id','email']);
+  ): Promise<Boolean> {
+    return await this.authService.forgotPassword(forgotPasswordDTO.email);
 
   }
 
@@ -105,8 +101,8 @@ export class AuthController {
   @Post('resetPassword')
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
-  ): Promise<Partial<User>> {
-    return await this.authService.resetPassword(resetPasswordDto, ["email"]);
+  ): Promise<Boolean> {
+    return await this.authService.resetPassword(resetPasswordDto);
 
   }
 }

@@ -1,9 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Injectable } from '@nestjs/common';
+import { User } from '@prisma/client';
 import { SignUpDto } from 'src/auth/dto/sign-up.dto';
 import { UserRepository } from './user.repository';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserInterface } from './interfaces/update-user.interface';
 
 @Injectable()
@@ -14,7 +12,6 @@ export class UserService {
     data: SignUpDto,
     selectedColumn?: (keyof User)[]
   ): Promise<User> {
-
     return await this.userRepository.create(data, selectedColumn)
   }
 
@@ -48,8 +45,5 @@ export class UserService {
     return await this.userRepository.findOneByEmail(email, selectedColumns)
 
   }
-
-
-
 
 }

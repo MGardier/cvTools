@@ -24,7 +24,6 @@ import { ResponseInterceptor } from './interceptors/response.interceptor';
       validate : validateEnv,
 
     }),
-    // ThrottlerModule.forRoot(),
     UserModule,
     PrismaModule,
     AuthModule,
@@ -36,6 +35,8 @@ import { ResponseInterceptor } from './interceptors/response.interceptor';
   controllers: [],
   providers: [
     PrismaService,
+    PrismaClientExceptionFilter,
+    HttpExceptionFilter,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
@@ -46,12 +47,6 @@ import { ResponseInterceptor } from './interceptors/response.interceptor';
     },
     {
       provide: APP_FILTER, useClass : GlobalExceptionFilter
-    },
-    {
-      provide: APP_FILTER, useClass : HttpExceptionFilter
-    },
-    {
-      provide: APP_FILTER, useClass : PrismaClientExceptionFilter
     },
      {
       provide: APP_INTERCEPTOR,

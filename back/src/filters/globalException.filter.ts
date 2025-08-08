@@ -13,6 +13,10 @@ import { timestamp } from 'rxjs';
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
 
+   constructor(
+    private readonly prismaFilter: PrismaClientExceptionFilter,
+    private readonly httpFilter: HttpExceptionFilter,
+  ) {}
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
@@ -26,13 +30,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
 
     if (exception instanceof PrismaClientKnownRequestError) {
-      const prismaFilter = new PrismaClientExceptionFilter();
-      return prismaFilter.catch(exception, host);
+      
+      return this.prismaFilter.catch(exception, host);
     }
 
     if (exception instanceof HttpException) {
-      const httpFilter = new HttpExceptionFilter();
-      return httpFilter.catch(exception, host);
+      return this.httpFilter.catch(exception, host);
     }
     this.logUnhandledException(logContext);
     response

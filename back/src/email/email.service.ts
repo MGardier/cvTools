@@ -40,7 +40,7 @@ export class EmailService {
         await this.natsClient.send('email.send', payload),
       );
     } catch (error) {
-      console.log(error);
+      
       throw error instanceof RpcException
         ? error
         : new RpcException(error.message);

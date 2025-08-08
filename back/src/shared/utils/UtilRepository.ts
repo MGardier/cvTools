@@ -4,6 +4,7 @@ import { TokenType } from "src/user-token/enum/token-type.enum";
 export abstract class UtilRepository {
 
     static getSelectedColumns<T>(columns?: (keyof T)[]): Record<keyof T, boolean> | undefined {
+
         const select = columns?.reduce((acc, column) => {
             acc[column] = true;
             return acc;
@@ -11,6 +12,12 @@ export abstract class UtilRepository {
         return select;
     }
 
+
+    static addColumnsToSelectedColumns<T>(addColumns: (keyof T)[],columns?: (keyof T)[], ) : (keyof T)[] | undefined {
+        return columns
+            ? [...new Set([...columns, ...addColumns])]
+            : undefined;
+    }
 
     static toPrismaTokenType(tokenType: TokenType): PrismaTokenType {
         const mapping = {

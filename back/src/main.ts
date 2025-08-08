@@ -1,18 +1,24 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { HttpExceptionFilter } from './filters/httpException.filter';
-import { PrismaClientExceptionFilter } from './filters/prismaException.filter';
-
-//TODO: A faire  - Améliore le typage
-//TODO: A faire  - S'occuper du rate limiter et vérifier le probléme avec le rate limiter
-//TODO: A faire  - Doc + swagger
-//TODO: A faire  - Test unitaire intégration + e2e à mettre en place
 
 
 
-//TODO: A faire  - Implémenter toute la logique admin et son rôle
+//TODO: A faire - Global - Améliore le typage
+//TODO: A faire - Auth - Améliore la gestions des erreurs 
+//TODO: A faire - Global - Ajouter les erreurs code 
+//TODO: A faire - Global - Ajout Readme
+//TODO: A faire  - Auth -  Implémenter toute la logique admin et son rôle
 
+
+//TODO :A faire - Intercepteur  -  Garder le status code  existant  + log intercepteur response et request
+
+
+
+//TODO: Amélioration  - S'occuper du rate limiter et vérifier le probléme avec le rate limiter
+//TODO: Amélioration  - Doc + swagger
+//TODO: Amélioration  - Test unitaire intégration + e2e à mettre en place
+//TODO: Amélioration  - Prévoir une stratégie pour nettoyer les tokens
 
 
 

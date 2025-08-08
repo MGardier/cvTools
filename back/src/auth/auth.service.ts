@@ -1,7 +1,6 @@
 import {
   Injectable,
-  InternalServerErrorException,
-  Logger,
+ 
   NotFoundException,
   UnauthorizedException,
 
@@ -18,7 +17,6 @@ import { SignUpDto } from './dto/sign-up.dto';
 
 import { TokenType } from 'src/user-token/enum/token-type.enum';
 import { User, UserStatus } from '@prisma/client';
-import { SignUpOptionsInterface } from './interfaces/sign-up-options.interface';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
 import { ConfirmAccountDto } from './dto/confirm-account.dto';
@@ -31,21 +29,21 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
-  private readonly logger;
+
   constructor(
     private readonly userTokenService: UserTokenService,
     private readonly userService: UserService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
   ) {
-    this.logger = new Logger('AuthService');
+  
   }
 
 
   /***************************************** AUTHENTIFICATION ***************************************************************************************/
 
 
-  async signUp(data: SignUpDto, options?: SignUpOptionsInterface): Promise<Pick<User, "id" | 'email'>> {
+  async signUp(data: SignUpDto, userSelectedColumn?: (keyof User)[]): Promise<Pick<User, "id" | 'email'>> {
 
     const hashedPassword = await this.__hashPassword(data.password);
 
@@ -54,13 +52,12 @@ export class AuthService {
         email: data.email,
         password: hashedPassword,
       },
-      options?.userSelectedColumn
+      userSelectedColumn
     );
 
     const token = await this.userTokenService.generateAndSave(
       { sub: user.id, email: user.email },
-      TokenType.CONFIRM_ACCOUNT,
-      options?.userTokenSelectedColumn
+      TokenType.CONFIRM_ACCOUNT
     );
 
     await this.emailService.sendAccountConfirmationLink(
@@ -72,9 +69,9 @@ export class AuthService {
   }
 
 
-  async signIn(data: SignInDto, options?: SignUpOptionsInterface): Promise<SignInOutputInterface> {
+  async signIn(data: SignInDto): Promise<SignInOutputInterface> {
 
-    const user = await this.userService.findOneByEmail(data.email, ['id', 'email', 'password']);
+    const user = await this.userService.findOneByEmail(data.email, ['id', 'email', 'password', 'status']);
     if (
       !user ||
       !user?.password ||
@@ -104,7 +101,6 @@ export class AuthService {
       ['token']
     );
 
-
     return { accessToken: access.token, refreshToken: refresh.token! };
   }
 
@@ -116,19 +112,18 @@ export class AuthService {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       token,
       TokenType.REFRESH,
-      ['id','token']
+      ['id', 'token']
     );
-    console.log(userToken)
     if (!userToken.id) throw new UnauthorizedException();
 
-    const user = await this.userService.findOneById(+payload.sub,['id']);
+    const user = await this.userService.findOneById(+payload.sub, ['id']);
     if (!user) throw new UnauthorizedException();
 
     await this.userTokenService.remove(userToken.id);
     return true;
   }
 
-  
+
   async refresh(token: string): Promise<SignInOutputInterface> {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       token, TokenType.REFRESH,
@@ -182,11 +177,11 @@ export class AuthService {
   async confirmAccount(
     confirmAccountDto: ConfirmAccountDto,
     selectedColumn?: (keyof User)[]
-  ): Promise<Partial<User>> {
+  ): Promise<Boolean> {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       confirmAccountDto.token,
       TokenType.CONFIRM_ACCOUNT,
-      ['id','token']
+      ['id']
     );
     if (!userToken.id || !payload.sub)
       throw new NotFoundException();
@@ -196,36 +191,36 @@ export class AuthService {
     }, selectedColumn);
 
     await this.userTokenService.remove(userToken.id);
-    return user!;
+    return true;
   }
 
-  async forgotPassword(email: string, selectedColumns?: (keyof User)[]): Promise<Partial<User>> {
-    const user = await this.userService.findOneByEmail(email, selectedColumns);
+  async forgotPassword(email: string): Promise<Boolean> {
+    const user = await this.userService.findOneByEmail(email, ['id', 'email']);
 
-    if (!user || !user.id || !user.email) throw new NotFoundException();
+    if (user) {
+      const userToken = await this.userTokenService.generateAndSave(
+        {
+          email: user.email!,
+          sub: user.id!,
+        },
+        TokenType.FORGOT_PASSWORD,
+      );
 
+      await this.emailService.sendResetPasswordLink(
+        user.email!,
+        `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${userToken.token}`,
+      );
+    }
 
-    const userToken = await this.userTokenService.generateAndSave(
-      {
-        email: user.email,
-        sub: user.id,
-      },
-      TokenType.FORGOT_PASSWORD,
-    );
-
-    await this.emailService.sendResetPasswordLink(
-      user.email!,
-      `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${userToken.token}`,
-    );
-
-    return user;
+    return true;
   }
 
-  async resetPassword(data: ResetPasswordDto, selectedColumns?: (keyof User)[]): Promise<Partial<User>> {
+  async resetPassword(data: ResetPasswordDto): Promise<Boolean> {
 
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       data.token,
       TokenType.FORGOT_PASSWORD,
+      ['id']
     );
 
     if (!userToken.id) throw new NotFoundException();
@@ -234,12 +229,12 @@ export class AuthService {
 
     const user = await this.userService.update(payload.sub, {
       password: hashedPassword,
-    }, selectedColumns);
+    }, ['id']);
 
     if (!user) throw new NotFoundException('User was not found ');
 
     await this.userTokenService.remove(userToken.id);
-    return user;
+    return true;
   }
 
 

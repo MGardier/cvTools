@@ -1,16 +1,25 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PrismaService } from '../../prisma/prisma.service';
-import { User, UserRoles, UserStatus } from "@prisma/client";
+import { Prisma, User, UserRoles, UserStatus } from "@prisma/client";
 
 import { SignUpDto } from "src/auth/dto/sign-up.dto";
 import { UtilRepository } from "src/shared/utils/UtilRepository";
-import { UpdateUserDto } from "./dto/update-user.dto";
 import { UpdateUserInterface } from "./interfaces/update-user.interface";
 
 @Injectable()
 export class UserRepository {
 
+
   constructor(private readonly prismaService: PrismaService) { }
+
+  static readonly DEFAULT_SELECT: Prisma.UserSelect = {
+    id: true,
+    email: true,
+    status: true,
+    createdAt: true,
+    updatedAt: true,
+    roles: true
+  };
 
   async create(
     data: SignUpDto,
@@ -18,7 +27,7 @@ export class UserRepository {
   ): Promise<User> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
     return await this.prismaService.user.create({
-      select,
+      select: select ?? UserRepository.DEFAULT_SELECT,
       data: {
         ...data,
         roles: UserRoles.USER,
@@ -35,7 +44,7 @@ export class UserRepository {
   ): Promise<User> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
     return await this.prismaService.user.update({
-      select,
+      select: select ?? UserRepository.DEFAULT_SELECT,
       where: { id },
       data,
     });
@@ -49,8 +58,7 @@ export class UserRepository {
   ): Promise<User[]> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
     return await this.prismaService.user.findMany({
-      select,
-
+      select: select ?? UserRepository.DEFAULT_SELECT,
     });
 
   }
@@ -62,7 +70,7 @@ export class UserRepository {
   ): Promise<User | null> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
     return await this.prismaService.user.findUnique({
-      select,
+      select: select ?? UserRepository.DEFAULT_SELECT,
       where: { id },
     });
 
@@ -74,10 +82,12 @@ export class UserRepository {
   ): Promise<User | null> {
     const select: Record<keyof User, boolean> | undefined = UtilRepository.getSelectedColumns<User>(selectedColumns);
     return await this.prismaService.user.findUnique({
-      select,
+      select: select ?? UserRepository.DEFAULT_SELECT,
       where: { email },
     });
 
   }
+
+
 
 }
