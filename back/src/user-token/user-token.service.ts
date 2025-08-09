@@ -1,96 +1,91 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, UserToken } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
-import { UserTokenDecodeInputInterface } from './interfaces/decode/user-token-decode-input.interface';
-import { UserTokenDecodeOutputInterface } from './interfaces/decode/user-token-decode-output.interface';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+
 import { JwtManagerService } from '../jwt-manager/jwt-manager.service';
-import { UserTokenGenerateInputInterface } from './interfaces/generate/user-token-generate-input.interface';
+import { v4 as uuidv4 } from 'uuid';
+import { TokenType } from './enum/token-type.enum';
+import { UserTokenRepository } from './user-token.repository';
+import { GenerateJwtOutputInterface } from 'src/jwt-manager/interfaces/generate-jwt-output.interface';
+import { UtilRepository } from 'src/shared/utils/UtilRepository';
+import { PayloadJwtInterface } from 'src/jwt-manager/interfaces/payload-jwt.interface';
+import { User, UserToken } from '@prisma/client';
+import { DecodeAndGetUserTokenOutput } from './interfaces/decode-and-get-user-token.output';
+import { UtilDate } from 'src/shared/utils/UtilDate';
+
 
 @Injectable()
 export class UserTokenService {
   constructor(
     private readonly jwtManagerService: JwtManagerService,
-    private readonly prismaService: PrismaService,
-  ) {}
+    private readonly userTokenRepository: UserTokenRepository,
+  ) { }
+
+
+  async generate(payload: PayloadJwtInterface, type: TokenType): Promise<GenerateJwtOutputInterface> {
+    return await this.jwtManagerService.generate(payload, type);
+  }
+
+
+  async generateAndSave(payload: PayloadJwtInterface, type: TokenType, selectedColumn?: (keyof UserToken)[]): Promise<Partial<UserToken>> {
+    let uuid: string = uuidv4();
+    const { token, expiresIn } = await this.generate({ ...payload, uuid }, type,);
+    const data = {
+      token,
+      type: UtilRepository.toPrismaTokenType(type),
+      expiresIn: UtilDate.__convertExpiresToDate(expiresIn),
+      uuid
+    };
+
+    return await this.userTokenRepository.create(data,
+      payload.sub,
+      selectedColumn
+    );
+  }
+
+
+
+  async decode(
+    token: string, type: TokenType,
+  ): Promise<PayloadJwtInterface> {
+    return await this.jwtManagerService.verify(
+      token,
+      type,
+    );
+  }
+
+
+  async decodeAndGet(
+    token: string, type: TokenType,
+    selectedColumn?: (keyof UserToken)[]
+  ): Promise<DecodeAndGetUserTokenOutput> {
+
+
+    const payload = await this.decode(
+      token,
+      type,
+    );
+    
+    if (!payload.uuid)
+      throw new UnauthorizedException();
+
+    const requiredColumns: (keyof UserToken)[] = ['token'];
+    const finalSelectedColumns =  UtilRepository.addColumnsToSelectedColumns<UserToken>(requiredColumns, selectedColumn)
+
+    const userToken = await this.userTokenRepository.findByUuid(payload.uuid, finalSelectedColumns);
+
+    if (userToken?.token !== token)
+      throw new UnauthorizedException();
+
+    return { userToken, payload };
+  }
+
 
   async remove(
     id: number,
-    select?: Prisma.UserTokenSelect,
-  ): Promise<UserToken | Pick<UserToken, 'id'>> {
-    try {
-      return await this.prismaService.userToken.delete({
-        select: select ?? { id: true, type: true, uuid: true },
-        where: {
-          id,
-        },
-      });
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException(
-          `UserToken with Id :  ${id}  was not found`,
-        );
-      }
-      throw error;
-    }
-  }
-
-  async generate(settings: UserTokenGenerateInputInterface): Promise<string> {
-    const uuid = settings.payload.uuid;
-
-    const { token, expiresIn } = await this.jwtManagerService.generate(
-      settings.payload,
-      settings.secretKey,
-      settings.expiresKey,
-    );
-    if (settings.type)
-      await this.__create({
-        token,
-        type: settings.type,
-        expiresIn: this.__convertExpiresToDate(expiresIn),
-        user: { connect: { id: +settings.payload.sub } },
-        ...(uuid ? { uuid } : {}),
-      });
-
-    return token;
-  }
-
-  async decode(
-    settings: UserTokenDecodeInputInterface,
-  ): Promise<UserTokenDecodeOutputInterface> {
-    let userToken;
-    const payload = await this.jwtManagerService.verify(
-      settings.token,
-      settings.secretKey,
-    );
-
-    if (settings.type && payload.uuid)
-      userToken = await this.__findByUuid(payload.uuid);
-
-    return userToken ? { userToken, payload } : { payload };
-  }
-
-  /********************************************* PRIVATE FUNCTION *********************************************/
-
-  private async __create(
-    data: Prisma.UserTokenCreateInput,
-    select?: Prisma.UserTokenSelect,
-  ): Promise<UserToken> {
-    return await this.prismaService.userToken.create({
-      select: select ?? { id: true },
-      data,
-    });
-  }
-
-  private async __findByUuid(uuid: string): Promise<UserToken | null> {
-    return await this.prismaService.userToken.findUnique({
-      where: {
-        uuid,
-      },
-    });
-  }
-
-  //Déplacer dans utils
-  private __convertExpiresToDate(expiresIn: number): Date {
-    return new Date(new Date().getTime() + expiresIn * 1000);
+    selectedColumns?: (keyof UserToken)[],
+  ): Promise<Partial<UserToken>> {
+    return await this.userTokenRepository.remove(id, selectedColumns);
   }
 }
+
+
+

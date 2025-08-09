@@ -1,37 +1,74 @@
-import { Injectable } from '@nestjs/common';
-import { JwtConfigService } from '../jwt-config/jwt-config.service';
+import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayloadInterface } from '../jwt-config/interfaces/jwt-payload.interface';
-import { JwtExpirationInterface } from '../jwt-config/interfaces/jwt-expiration.interface';
-import { JwtSecretInterface } from '../jwt-config/interfaces/jwt-secret.interface';
-import { JwtManagerGenerateOutputInterface } from './interface/jwt-manager-generate-output.interface';
+
+import { ConfigService } from '@nestjs/config';
+import { TokenType } from 'src/user-token/enum/token-type.enum';
+import { GenerateJwtOutputInterface } from './interfaces/generate-jwt-output.interface';
+import { PayloadJwtInterface } from './interfaces/payload-jwt.interface';
 
 @Injectable()
 export class JwtManagerService {
   constructor(
-    private readonly jwtConfigService: JwtConfigService,
+    @Inject(ConfigService) private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
-  async generate(
-    payload: JwtPayloadInterface,
-    secretKey: keyof JwtSecretInterface,
-    expiresKey: keyof JwtExpirationInterface,
-  ): Promise<JwtManagerGenerateOutputInterface> {
-    const expiresIn = this.jwtConfigService.getExpiration(expiresKey);
-    const token = await this.jwtService.signAsync(payload, {
-      secret: this.jwtConfigService.getSecret(secretKey),
+
+  async generate(payload: PayloadJwtInterface,
+    type: TokenType,
+  ): Promise<GenerateJwtOutputInterface> {
+    const expiresIn = this.__getExpiration(type);
+    const token = await this.jwtService.signAsync({
+      ...payload
+    }, {
+      secret: this.__getSecret(type),
       expiresIn,
     });
+
+   
     return { token, expiresIn };
   }
 
   async verify(
     token: string,
-    secretKey: keyof JwtSecretInterface,
-  ): Promise<JwtPayloadInterface> {
+    type: TokenType,
+  ): Promise<PayloadJwtInterface> {
     return await this.jwtService.verifyAsync(token, {
-      secret: this.jwtConfigService.getSecret(secretKey),
+      secret: this.__getSecret(type),
     });
   }
+
+
+  /********************************************* PRIVATE METHOD *********************************************************************************************** */
+
+
+
+  private __getSecret(type: TokenType): string {
+    switch (type) {
+      case TokenType.FORGOT_PASSWORD:
+        return this.configService.get('JWT_FORGOT_PASSWORD_SECRET')!;
+      case TokenType.REFRESH:
+        return this.configService.get('JWT_REFRESH_SECRET')!;
+      case TokenType.CONFIRM_ACCOUNT:
+      default:
+        return this.configService.get('JWT_DEFAULT_SECRET')!;
+    }
+
+  }
+
+
+  private __getExpiration(type: TokenType): number {
+    switch (type) {
+      case TokenType.CONFIRM_ACCOUNT:
+        return this.configService.get('JWT_CONFIRMATION_ACCOUNT_EXPIRATION')!;
+      case TokenType.FORGOT_PASSWORD:
+        return this.configService.get('JWT_FORGOT_PASSWORD_EXPIRATION')!;
+      case TokenType.REFRESH:
+        return this.configService.get('JWT_REFRESH_EXPIRATION')!;
+      default:
+        return this.configService.get('JWT_ACCESS_EXPIRATION')!;
+    }
+
+  }
+
 }

@@ -33,13 +33,14 @@ export class EmailService {
     });
   }
 
+  //Todo : améliorer la gestion du ms 
   private async __sendToMsEmail(payload: Record<string, any>) {
     try {
       return await firstValueFrom(
         await this.natsClient.send('email.send', payload),
       );
     } catch (error) {
-      console.log(error);
+      
       throw error instanceof RpcException
         ? error
         : new RpcException(error.message);

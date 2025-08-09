@@ -1,6 +1,8 @@
 import { SetMetadata } from '@nestjs/common';
-import { JwtSecretInterface } from 'src/jwt-config/interfaces/jwt-secret.interface';
+import { TokenType } from 'src/user-token/enum/token-type.enum';
+
+
 
 export const TOKEN_TYPE = 'tokenType';
-export const TokenType = (type: keyof JwtSecretInterface) =>
+export const Token_Type = (type: TokenType.ACCESS | TokenType.REFRESH) =>
   SetMetadata('tokenType', type);

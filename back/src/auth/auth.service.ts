@@ -1,314 +1,250 @@
 import {
-  BadRequestException,
   Injectable,
-  InternalServerErrorException,
-  Logger,
+ 
   NotFoundException,
   UnauthorizedException,
+
 } from '@nestjs/common';
-import {
-  TokenType,
-  User,
-  UserRoles,
-  UserStatus,
-  UserToken,
-} from '@prisma/client';
+
 
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
 import { UserTokenService } from '../user-token/user-token.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '@nestjs/config';
-import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+
+
+import { TokenType } from 'src/user-token/enum/token-type.enum';
+import { User, UserStatus } from '@prisma/client';
 import { SignInDto } from './dto/sign-in.dto';
-import { v4 as uuidv4 } from 'uuid';
-import { SendConfirmAccountInputInterface } from './interfaces/send-confirm-account-input.interface';
+import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
 import { ConfirmAccountDto } from './dto/confirm-account.dto';
-import { ErrorCodeEnum } from 'src/enums/error-codes.enum';
-import { SendConfirmAccountOutputInterface } from './interfaces/send-confirm-account-output.interface';
-import { SignUpOutputInterface } from './interfaces/sign-up-output.interface';
-import { SignInOutputInterface } from './interfaces/sign-in-output.interface';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+
+
+//Todo : rajouter les codes d'erreurs pour les messages 
+//Todo : Oubli de suppression des anciens tokens
+
 
 @Injectable()
 export class AuthService {
-  private readonly logger;
+
   constructor(
     private readonly userTokenService: UserTokenService,
     private readonly userService: UserService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
   ) {
-    this.logger = new Logger('AuthService');
+  
   }
 
-  /* ----------  AUTHENTIFICATION ------------------------------------------------------- */
 
-  async signUp(data: SignUpDto): Promise<SignUpOutputInterface> {
+  /***************************************** AUTHENTIFICATION ***************************************************************************************/
+
+
+  async signUp(data: SignUpDto, userSelectedColumn?: (keyof User)[]): Promise<Pick<User, "id" | 'email'>> {
+
     const hashedPassword = await this.__hashPassword(data.password);
 
-    const userWithEmail = await this.userService.findOneByEmail(data.email);
-    if (userWithEmail)
-      throw new BadRequestException(
-        'An account with this email already exist.',
-      );
+    const user = await this.userService.create(
+      {
+        email: data.email,
+        password: hashedPassword,
+      },
+      userSelectedColumn
+    );
 
-    const user = await this.userService.create({
-      ...data,
-      password: hashedPassword,
-      roles: UserRoles.USER,
-      status: UserStatus.PENDING,
-    });
+    const token = await this.userTokenService.generateAndSave(
+      { sub: user.id, email: user.email },
+      TokenType.CONFIRM_ACCOUNT
+    );
 
-    const { success, errorCode } = await this.__sendConfirmAccount({
-      email: user.email,
-      userId: user.id,
-      isFallback: true,
-    });
+    await this.emailService.sendAccountConfirmationLink(
+      user.email,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
+    );
 
-    return { user, success, errorCode };
+    return user;
   }
 
-  async signIn(data: SignInDto): Promise<SignInOutputInterface> {
-    const user = await this.userService.findOneByEmail(data.email, {
-      id: true,
-      email: true,
-      password: true,
-    });
 
+  async signIn(data: SignInDto): Promise<SignInOutputInterface> {
+
+    const user = await this.userService.findOneByEmail(data.email, ['id', 'email', 'password', 'status']);
     if (
       !user ||
       !user?.password ||
       !(await bcrypt.compare(data.password, user.password))
     )
       throw new UnauthorizedException('Invalid credentials');
+
     if (user.status === UserStatus.PENDING)
       throw new UnauthorizedException('User must be valid his account');
+
     if (user.status === UserStatus.BANNED)
       throw new UnauthorizedException('User is banned and cannot login ');
 
-    const accessToken = await this.userTokenService.generate({
-      payload: {
-        email: user.email,
-        sub: user.id,
-      },
-      expiresKey: 'ACCESS',
-      secretKey: 'ACCESS',
-    });
-    let uuid: string = this.__createUuid();
-    const refreshToken = await this.userTokenService.generate({
-      payload: {
-        email: user.email,
-        sub: user.id,
-        uuid,
-      },
-      expiresKey: 'REFRESH',
-      secretKey: 'REFRESH',
-      type: TokenType.REFRESH,
-    });
-
-    return { accessToken, refreshToken };
-  }
-
-  async logout(token: string): Promise<Partial<UserToken>> {
-    const { userToken, payload } = await this.userTokenService.decode({
-      token,
-      secretKey: 'REFRESH',
-      type: TokenType.REFRESH,
-    });
-    if (!userToken) throw new UnauthorizedException('No token was found ');
-
-    const user = await this.userService.findOneById(+payload.sub);
-    if (!user) throw new UnauthorizedException('User was not found');
-
-    return await this.userTokenService.remove(userToken.id);
-  }
-
-  async refresh(token: string): Promise<SignInOutputInterface> {
-    const { userToken, payload } = await this.userTokenService.decode({
-      token,
-      secretKey: 'REFRESH',
-      type: TokenType.REFRESH,
-    });
-
-    if (!userToken) throw new UnauthorizedException('No token was found ');
-
-    const user = await this.userService.findOneById(+payload.sub);
-    if (!user) throw new UnauthorizedException('User was not found');
-
-    const { accessToken, refreshToken } = await this.__generateTokenPair(
-      user.email,
-      user.id,
+    const access = await this.userTokenService.generate({
+      email: user.email!,
+      sub: user.id!,
+    },
+      TokenType.ACCESS
     );
 
+    const refresh = await this.userTokenService.generateAndSave(
+      {
+        email: user.email!,
+        sub: user.id!,
+      },
+      TokenType.REFRESH,
+      ['token']
+    );
+
+    return { accessToken: access.token, refreshToken: refresh.token! };
+  }
+
+
+
+
+
+  async logout(token: string): Promise<boolean> {
+    const { userToken, payload } = await this.userTokenService.decodeAndGet(
+      token,
+      TokenType.REFRESH,
+      ['id', 'token']
+    );
+    if (!userToken.id) throw new UnauthorizedException();
+
+    const user = await this.userService.findOneById(+payload.sub, ['id']);
+    if (!user) throw new UnauthorizedException();
+
     await this.userTokenService.remove(userToken.id);
-    return { accessToken, refreshToken };
+    return true;
   }
 
-  /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
 
-  async reSendConfirmAccount(email: string): Promise<void> {
-    const user = await this.userService.findOneByEmail(email);
-    if (!user) return;
-    await this.__sendConfirmAccount({
-      email: user.email,
-      userId: user.id,
-      isFallback: false,
-    });
+  async refresh(token: string): Promise<SignInOutputInterface> {
+    const { userToken, payload } = await this.userTokenService.decodeAndGet(
+      token, TokenType.REFRESH,
+    );
+
+    if (!userToken.id || !userToken.token) throw new UnauthorizedException();
+
+    const user = await this.userService.findOneById(+payload.sub);
+    if (!user?.id || !user?.email || !user) throw new UnauthorizedException('User was not found');
+
+    const newPayload = {
+      sub: user.id,
+      email: user.email
+    }
+
+    const accessToken = await this.userTokenService.generate(newPayload, TokenType.ACCESS);
+    const refreshToken = await this.userTokenService.generateAndSave(newPayload, TokenType.REFRESH);
+
+    await this.userTokenService.remove(userToken.id);
+    return { accessToken: accessToken.token, refreshToken: refreshToken.token! };
   }
+
+  // /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
+
+
+
+  async sendConfirmAccount(
+    email: string,
+  ): Promise<boolean> {
+
+    const user = await this.userService.findOneByEmail(email, ['id', 'status']);
+    if (!user?.id || !user?.status)
+      throw new NotFoundException();
+
+    if (user.status !== UserStatus.PENDING)
+      throw new UnauthorizedException();
+
+    const userToken = await this.userTokenService.generateAndSave({ sub: user.id, email }, TokenType.CONFIRM_ACCOUNT);
+
+    await this.emailService.sendAccountConfirmationLink(
+      email,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${userToken.token}`,
+    );
+
+    return true;
+  }
+
+
+
 
   async confirmAccount(
     confirmAccountDto: ConfirmAccountDto,
-  ): Promise<Partial<User>> {
-    const { userToken, payload } = await this.userTokenService.decode({
-      token: confirmAccountDto.token,
-      secretKey: 'DEFAULT',
-      type: TokenType.CONFIRM_ACCOUNT,
-    });
-    if (!userToken)
-      throw new NotFoundException(
-        'No confirm account token was found for this user',
-      );
+    selectedColumn?: (keyof User)[]
+  ): Promise<Boolean> {
+    const { userToken, payload } = await this.userTokenService.decodeAndGet(
+      confirmAccountDto.token,
+      TokenType.CONFIRM_ACCOUNT,
+      ['id']
+    );
+    if (!userToken.id || !payload.sub)
+      throw new NotFoundException();
 
     const user = await this.userService.update(payload.sub, {
       status: UserStatus.ALLOWED,
-    });
+    }, selectedColumn);
 
     await this.userTokenService.remove(userToken.id);
-    return user;
+    return true;
   }
 
-  async forgotPassword(email: string): Promise<Partial<User>> {
-    const user = await this.userService.findOneByEmail(email);
-    if (!user) throw new NotFoundException();
+  async forgotPassword(email: string): Promise<Boolean> {
+    const user = await this.userService.findOneByEmail(email, ['id', 'email']);
 
-    let uuid: string = this.__createUuid();
+    if (user) {
+      const userToken = await this.userTokenService.generateAndSave(
+        {
+          email: user.email!,
+          sub: user.id!,
+        },
+        TokenType.FORGOT_PASSWORD,
+      );
 
-    const token = await this.userTokenService.generate({
-      payload: {
-        email: user.email,
-        sub: user.id,
-        uuid,
-      },
-      expiresKey: 'FORGOT_PASSWORD',
-      secretKey: 'FORGOT_PASSWORD',
-      type: TokenType.FORGOT_PASSWORD,
-    });
+      await this.emailService.sendResetPasswordLink(
+        user.email!,
+        `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${userToken.token}`,
+      );
+    }
 
-    await this.emailService.sendResetPasswordLink(
-      user.email,
-      `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${token}`,
+    return true;
+  }
+
+  async resetPassword(data: ResetPasswordDto): Promise<Boolean> {
+
+    const { userToken, payload } = await this.userTokenService.decodeAndGet(
+      data.token,
+      TokenType.FORGOT_PASSWORD,
+      ['id']
     );
 
-    return user;
-  }
+    if (!userToken.id) throw new NotFoundException();
 
-  async resetPassword(data: ResetPasswordDto): Promise<Partial<User>> {
-    const { userToken, payload } = await this.userTokenService.decode({
-      token: data.token,
-      secretKey: 'FORGOT_PASSWORD',
-      type: TokenType.FORGOT_PASSWORD,
-    });
-    if (!userToken) throw new NotFoundException('Token was not found ');
     const hashedPassword = await this.__hashPassword(data.password);
+
     const user = await this.userService.update(payload.sub, {
       password: hashedPassword,
-    });
+    }, ['id']);
+
     if (!user) throw new NotFoundException('User was not found ');
+
     await this.userTokenService.remove(userToken.id);
-    return user;
+    return true;
   }
 
-  /* ---------------------   UTILS FUNCTIONS ---------------------------------------------------------- */
+
+
+  /********************************************* PRIVATE METHOD *********************************************************************************************** */
 
   private async __hashPassword(password: string) {
     const saltRound = Number(this.configService.get('HASH_SALT_ROUND')) || 12;
+    return await bcrypt.hash(password, saltRound);
 
-    try {
-      return await bcrypt.hash(password, saltRound);
-    } catch (e) {
-      throw new InternalServerErrorException(
-        'Hash password failed unexpectedly in SignUp',
-      );
-    }
   }
 
-  private __createUuid(): string {
-    return uuidv4();
-  }
-
-  private async __generateTokenPair(email: string, sub: number) {
-    const accessToken = await this.userTokenService.generate({
-      payload: {
-        email,
-        sub,
-      },
-      expiresKey: 'ACCESS',
-      secretKey: 'ACCESS',
-    });
-    let uuid: string = this.__createUuid();
-    const refreshToken = await this.userTokenService.generate({
-      payload: {
-        email,
-        sub,
-        uuid,
-      },
-      expiresKey: 'REFRESH',
-      secretKey: 'REFRESH',
-      type: TokenType.REFRESH,
-    });
-    return { accessToken, refreshToken };
-  }
-
-  private async __sendConfirmAccount(
-    data: SendConfirmAccountInputInterface,
-  ): Promise<SendConfirmAccountOutputInterface> {
-    let uuid: string = this.__createUuid();
-    let success = true;
-    let token: string | undefined;
-    let errorCode: string | undefined;
-
-    try {
-      token = await this.userTokenService.generate({
-        payload: {
-          sub: data.userId,
-          email: data.email,
-          uuid,
-        },
-        expiresKey: 'CONFIRMATION_ACCOUNT',
-        secretKey: 'DEFAULT',
-        type: TokenType.CONFIRM_ACCOUNT,
-      });
-    } catch (e) {
-      success = false;
-      errorCode = ErrorCodeEnum.TOKEN_GENERATION_FAILED;
-      this.logger.error(`Generate Token failed : `, {
-        operation: 'signUp',
-        step: 'token_generation',
-        error: e.message,
-      });
-      if (data.isFallback) throw e;
-    }
-    try {
-      let r;
-      if (success && token)
-        r = await this.emailService.sendAccountConfirmationLink(
-          data.email,
-          `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
-        );
-
-      console.log(r);
-    } catch (e) {
-      success = false;
-      errorCode = ErrorCodeEnum.EMAIL_SENDING_FAILED;
-      this.logger.error('Sending email failed : ', {
-        operation: 'signUp',
-        step: 'sending_confirmation_email',
-        error: e.message,
-      });
-
-      if (data.isFallback) throw e;
-    }
-    return { success, errorCode };
-  }
 }

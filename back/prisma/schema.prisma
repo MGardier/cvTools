@@ -25,7 +25,7 @@ datasource db {
   }
 
 
-  enum TokenType {
+  enum PrismaTokenType {
     REFRESH
     FORGOT_PASSWORD
     CONFIRM_ACCOUNT
@@ -50,52 +50,55 @@ datasource db {
 
 
 model User {
+    @@map("user")
     id              Int                @id @default(autoincrement())
     email           String             @unique 
     status          UserStatus             @default(ALLOWED)
     password        String?             
-    createdAt       DateTime           @default(now())
-    updatedAt       DateTime?          @updatedAt
+    createdAt       DateTime           @default(now()) @map("created_at")
+    updatedAt       DateTime?          @updatedAt      @map("updated_at")
     roles           UserRoles        
     tokens          UserToken[] 
   }
 
 model UserToken {
+    @@map("user_token")
     id              Int                @id @default(autoincrement())
     token           String             @db.Text
-    type            TokenType
-    expiresIn       DateTime
+    type            PrismaTokenType
+    expiresIn       DateTime           @map("expires_in")
     uuid            String?             @unique
-    createdAt       DateTime           @default(now())
-    userId          Int
+    createdAt       DateTime           @default(now()) @map("created_at")
+    userId          Int                @map("user_id")
     user  User @relation(fields: [userId], references: [id])
   }
 
 
 
 model PersonalInfo {
+    @@map("personnal_info")
     id            Int   @id @default(autoincrement())
     lastName      String   
     firstName     String   
     civility      Civility @default(NOT_SPECIFY)
     phone         String?  
     description   String?    @db.VarChar(250)
-    createdAt     DateTime @default(now()) 
-    updatedAt     DateTime? @updatedAt
-
+    createdAt     DateTime @default(now())  @map("created_at")
+    updatedAt     DateTime? @updatedAt      @map("updated_at")
 }
 
 
 
 model File {
 
+  @@map("file")
   id            Int   @id @default(autoincrement())
   name          String
   type          FileType
   msId          Int
-  createdAt     DateTime @default(now()) 
-  tableName     TableNameTypeForFile
-  tableId       Int
+  createdAt     DateTime @default(now())  @map("created_at")
+  tableName     TableNameTypeForFile      @map("table_name")
+  tableId       Int                       @map("table_id")
 
 }
 
@@ -103,15 +106,16 @@ model File {
 
 model Address {
 
+  @@map("address")
   id            Int   @id @default(autoincrement())
   street        String
   city          String
-  postalCode    Int
+  postalCode    Int                       @map("postal_code")
   departement   String
-  createdAt     DateTime @default(now()) 
-  updatedAt     DateTime? @updatedAt
-  tableName     TableNameTypeForFile
-  tableId       Int
+  createdAt     DateTime @default(now())  @map("created_at")
+  updatedAt     DateTime? @updatedAt      @map("updated_at")
+  tableName     TableNameTypeForFile      @map("table_name")
+  tableId       Int                       @map("table_id")
 
 }
 
