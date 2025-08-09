@@ -1,6 +1,6 @@
 import { DropdownMenuItem } from "@/shared/components/ui/dropdown-menu";
 import type { LinkItemInterface } from "@/shared/interfaces/routing/link-item.interface";
-import { cn } from "@/shared/libs/utils";
+import { cn } from "@/shared/utils/utils";
 import { forwardRef, type ComponentPropsWithoutRef } from "react";
 
 export interface MobileNavigationLinkProps

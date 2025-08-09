@@ -1,4 +1,4 @@
-import { AppLogo } from "./app-logo";
+import { AppLogo } from "../logo/app-logo";
 import { Navigation } from "./navigation/navigation";
 
 export const Header = () => {

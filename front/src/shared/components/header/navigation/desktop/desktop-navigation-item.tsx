@@ -1,5 +1,5 @@
 import { NavigationMenuLink } from "@/shared/components/ui/navigation-menu";
-import { cn } from "@/shared/libs/utils";
+import { cn } from "@/shared/utils/utils";
 import type { LucideIcon } from "lucide-react";
 import { forwardRef } from "react";
 

@@ -8,10 +8,14 @@ export const NAVBAR_MENU_ITEMS: MenuItemInterface[] = [
     linkItems: [
       {
         icon: BookOpen,
-        title: "SignUp",
-
+        title: "Inscription",
         link: ROUTES.auth.signUp,
-
+        description: "Permet de créer un compte",
+      },
+      {
+        icon: BookOpen,
+        title: "Inscription",
+        link: ROUTES.auth.signUp,
         description: "Permet de créer un compte",
       },
     ],

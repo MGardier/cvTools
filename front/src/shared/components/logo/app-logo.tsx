@@ -1,5 +1,5 @@
 import { ROUTES } from "@/shared/data/routes";
-import { cn } from "@/shared/libs/utils";
+import { cn } from "@/shared/utils/utils";
 
 export interface AppLogoProps {
   className?: string;
@@ -15,8 +15,8 @@ export const AppLogo = ({ className }: AppLogoProps) => {
       )}
       aria-label="Retour à l'accueil CVTools"
     >
-      <span>CV</span>
-      <span className="text-blue-500">Tools</span>
+      <span className="text-gray-800">CV</span>
+      <span className="text-blue-400">Tools</span>
     </a>
   );
 };
