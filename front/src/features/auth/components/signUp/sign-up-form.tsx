@@ -4,8 +4,27 @@ import { AuthCardHeader } from "../auth-card-header";
 import { AuthCardContent } from "../auth-card-content";
 import { AuthSocialMedia } from "../auth-social-media";
 import { AuthField } from "../auth-field";
+import { useForm } from "react-hook-form";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signUpSchema } from "./sign-up-schema";
+import type z from "zod";
+
+//TODO : surlignage en rouge des champs
 
 export const SignUpForm = () => {
+  const form = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof signUpSchema>) =>
+    console.log(values);
+
   return (
     <Card className="border-0 shadow-none w-full max-w-sm md:max-w-md lg:max-w-lg">
       <AuthCardHeader title="Créer un compte">
@@ -14,7 +33,7 @@ export const SignUpForm = () => {
           Connectez-vous
         </a>
       </AuthCardHeader>
-      <AuthCardContent>
+      <AuthCardContent {...{ onSubmit, form }}>
         <AuthSocialMedia />
         <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
           <span className="bg-card text-muted-foreground relative z-10 px-2">
@@ -25,25 +44,31 @@ export const SignUpForm = () => {
           {/** EMAIL  */}
           <AuthField
             label="Email"
-            id="email"
+            name="email"
             type="email"
             placeholder="john.doe@example.com"
+            required
+            {...{ form }}
           />
 
           {/** PASSWORD  */}
           <AuthField
             label="Mot de passe"
-            id="password"
+            name="password"
             type="password"
             placeholder="••••••••••••"
+            required
+            {...{ form }}
           />
 
           {/** CONFIRM PASSWORD  */}
           <AuthField
             label="Confirmer le mot de passe"
-            id="confirmationPassword"
+            name="confirmPassword"
             type="password"
             placeholder="••••••••••••"
+            required
+            {...{ form }}
           />
           <Button
             type="submit"

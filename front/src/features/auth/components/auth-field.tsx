@@ -1,22 +1,44 @@
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
+
 
 interface AuthFieldProps {
   label: string;
-  id: string;
+  name: string;
   type: string;
   placeholder: string;
+  required : boolean;
+  form: any;
 }
 
-export const AuthField = ({label, id, type, placeholder} : AuthFieldProps) => {
+export const AuthField = ({
+  form,
+  label,
+  name,
+  type,
+  required,
+  placeholder,
+}: AuthFieldProps) => {
   return (
     <div className="grid gap-3">
-      <Label htmlFor="email">{label}</Label>
-      <Input
-        id={id}
-        type={type}
-        placeholder={placeholder}
-        required
+      <FormField
+        control={form.control}
+        name={name}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{label}</FormLabel>
+            <FormControl>
+              <Input {...{placeholder,type,required,...field}}/>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
       />
     </div>
   );
