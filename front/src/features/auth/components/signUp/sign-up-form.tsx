@@ -7,23 +7,33 @@ import { AuthField } from "../auth-field";
 import { useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signUpSchema } from "./sign-up-schema";
+
 import type z from "zod";
+import { createSignUpSchema } from "../../schema/sign-up-schema";
+import { useTranslation } from "react-i18next";
+
 
 //TODO : surlignage en rouge des champs
 
 export const SignUpForm = () => {
+
+  const { t } = useTranslation('auth/errors');
+
+  const signUpSchema = createSignUpSchema(t);
+  const defaultValues = {
+    email: "",
+    password: "",
+    confirmPassword: "",
+  };
+
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
+    defaultValues,
   });
 
-  const onSubmit = (values: z.infer<typeof signUpSchema>) =>
-    console.log(values);
+  const onSubmit = (values: z.infer<typeof signUpSchema>) => {
+    return console.log(values);
+  };
 
   return (
     <Card className="border-0 shadow-none w-full max-w-sm md:max-w-md lg:max-w-lg">

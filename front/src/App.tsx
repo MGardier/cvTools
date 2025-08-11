@@ -7,7 +7,7 @@ import { appRoutes } from "./routing /routes.config";
 
 function App() {
 
-    console.log(generateRoutes(appRoutes))
+
   return (
     <main className=" w-full  relative flex flex-col min-h-screen bg-white">
       <Header />

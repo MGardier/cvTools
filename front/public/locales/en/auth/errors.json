@@ -1,0 +1,16 @@
+{
+  "validation": {
+    "email": {
+      "invalid": "The email is not valid."
+    },
+    "password": {
+      "invalid": "Password must contain lowercase and uppercase letters, special characters and numbers.",
+      "minLength": "Password must be at least 8 characters long."
+    },
+    "confirmPassword": {
+      "invalid": "Confirmation must contain lowercase and uppercase letters, special characters and numbers.",
+      "minLength": "Confirmation must be at least 8 characters long.",
+      "notEqual": "Passwords do not match."
+    }
+  }
+}

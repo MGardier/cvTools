@@ -12,7 +12,7 @@ interface AuthCardContentProps {
 
 export const AuthCardContent = ({children,form, onSubmit} : AuthCardContentProps )=>  {
 
-
+  
   return (  
       <CardContent>
         <Form {...form}>  
