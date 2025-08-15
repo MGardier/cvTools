@@ -1,6 +1,7 @@
 import { IsEmail, IsNotEmpty, Matches, MinLength } from 'class-validator';
 
 export class SignUpDto {
+  
   @IsEmail({},{message: "L'email doit être un email valide."})
   @IsNotEmpty({message:"L'email ne peut pas être vide."})
   email: string;
@@ -12,4 +13,6 @@ export class SignUpDto {
     message : "Le mot de passe doit contenir des lettres minuscules et majuscules, des caractéres spéciaux et des chiffres."
   })
   password: string;
+
+
 }

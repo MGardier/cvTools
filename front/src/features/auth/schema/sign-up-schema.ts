@@ -1,8 +1,8 @@
+import type { TFunction } from "i18next";
 import { z } from "zod"
 
 
-
-export const createSignUpSchema = (t: any) => {
+export const createSignUpSchema = (t: TFunction<'auth/errors', undefined>) => {
   const regexPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
 
   return z.object({
@@ -15,7 +15,7 @@ export const createSignUpSchema = (t: any) => {
     password:
       z.string({ message: t('validation.password.invalid') })
         .min(8, { message: t('validation.password.minLength') })
-        .regex(regexPassword, { message: t('validation.password.invalid',{nes: 'errors'}) }),
+        .regex(regexPassword, { message: t('validation.password.invalid') }),
 
     //CONFIRM PASSWORD
     confirmPassword:

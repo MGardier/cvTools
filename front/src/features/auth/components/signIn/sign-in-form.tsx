@@ -18,7 +18,7 @@ import type { ApiErrorsInterface } from "@/shared/interfaces/api-errors.interfac
 
 
 
-export const SignUpForm = () => {
+export const SignInForm = () => {
 
   const { t } = useTranslation('auth/errors');
 
@@ -26,7 +26,6 @@ export const SignUpForm = () => {
   const defaultValues = {
     email: "",
     password: "",
-    confirmPassword: "",
   };
 
   const form = useForm<z.infer<typeof signUpSchema>>({

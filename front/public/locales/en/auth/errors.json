@@ -12,5 +12,8 @@
       "minLength": "Confirmation must be at least 8 characters long.",
       "notEqual": "Passwords do not match."
     }
+  },
+  "api": {
+    "EMAIL_ALREADY_EXISTS_ERROR": ""
   }
 }

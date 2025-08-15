@@ -192,6 +192,7 @@ export class AuthService {
 
     await this.userTokenService.remove(userToken.id);
     return true;
+    
   }
 
   async forgotPassword(email: string): Promise<Boolean> {

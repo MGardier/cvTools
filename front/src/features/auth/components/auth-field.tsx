@@ -32,7 +32,7 @@ export const AuthField = ({
         name={name}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{label}</FormLabel>
+              <FormLabel>{label}</FormLabel>
             <FormControl>
               <Input {...{placeholder,type,required,...field}}/>
             </FormControl>

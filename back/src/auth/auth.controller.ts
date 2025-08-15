@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   Body,
   Controller,
   Delete,
@@ -20,7 +21,7 @@ import { TokenType } from 'src/user-token/enum/token-type.enum';
 
 
 
-
+//TODO : void to boolean 
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -35,7 +36,9 @@ export class AuthController {
   async signUp(
     @Body() signUpDto: SignUpDto,
   ): Promise<Pick<User, "id" | 'email'>> {
-
+  
+    throw new BadGatewayException()
+    
     return await this.authService.signUp(signUpDto, ["id", "email"]);
   }
 

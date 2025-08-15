@@ -12,5 +12,9 @@
       "minLength": "La confirmation doit faire au minimum 8 caractères.",
       "notEqual": "Les mots de passe ne correspondent pas."
     }
+  },
+  "api_response": {
+    "email_already_exists_error": "Cette adresse email est déjà utilisée.",
+    "unknow_error": "Une erreur inattendue est survenue."
   }
 }

@@ -16,9 +16,9 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
 
-    const logContext = this.buildLogContext(request, exception);
+    const logContext = this.__buildLogContext(request, exception);
 
-    this.logPrismaException(logContext);
+    this.__logPrismaException(logContext);
 
     switch (exception.code) {
       case PrismaErrorEnum.UniqueConstraintFailed:
@@ -72,7 +72,7 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
   /***************************************** LOG METHOD   ***************************************************************************************/
 
 
-  private buildLogContext(request: Request, exception: Prisma.PrismaClientKnownRequestError): LogContextInterface {
+  private __buildLogContext(request: Request, exception: Prisma.PrismaClientKnownRequestError): LogContextInterface {
     return {
       method: request.method,
       url: request.url,
@@ -83,7 +83,7 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
     };
   }
 
-  private logPrismaException( context: LogContextInterface): void {
+  private __logPrismaException( context: LogContextInterface): void {
 
     const { method, url, statusCode, message, stack,timestamp} = context;
     this.logger.error(`Prisma Error ${statusCode} : ${method} ${url} - ${timestamp} \n${message} \n${stack}`);

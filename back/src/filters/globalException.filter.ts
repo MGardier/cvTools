@@ -8,7 +8,7 @@ import { ErrorCodeEnum } from "src/enums/error-codes.enum";
 import { LogContextInterface } from "src/shared/interfaces/log-context.interface";
 import { timestamp } from 'rxjs';
 
-
+//TODO : __pour les privatees 
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
