@@ -7,7 +7,7 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Response, Request } from 'express';
-import { ApiResponseInterface } from 'src/shared/interfaces/api-response.interface';
+import { ApiResponseInterface } from 'src/interfaces/api-response.interface';
 
 
 

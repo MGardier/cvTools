@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import { PrismaClientExceptionFilter } from "./prismaException.filter";
 import { HttpExceptionFilter } from "./httpException.filter";
 import { ErrorCodeEnum } from "src/enums/error-codes.enum";
-import { LogContextInterface } from "src/shared/interfaces/log-context.interface";
+import { LogContextInterface } from "src/interfaces/log-context.interface";
 import { timestamp } from 'rxjs';
 
 //TODO : __pour les privatees 

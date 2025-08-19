@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { Request, Response } from 'express';
 import { ErrorCodeEnum } from "src/enums/error-codes.enum";
 import { PrismaErrorEnum } from "src/enums/prisma-error-codes.enum";
-import { LogContextInterface } from 'src/shared/interfaces/log-context.interface';
+import { LogContextInterface } from 'src/interfaces/log-context.interface';
 
 
 @Catch(Prisma.PrismaClientKnownRequestError)

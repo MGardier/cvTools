@@ -4,27 +4,28 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/components/ui/form";
-import { Input } from "@/shared/components/ui/input";
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 
 
-interface AuthFieldProps {
-  label: string;
-  name: string;
+interface AuthFieldProps<TFormData extends FieldValues> {
+  label?: string;
+  name: Path<TFormData>;
   type: string;
-  placeholder: string;
-  required : boolean;
-  form: any;
+  placeholder?: string;
+  required ?: boolean;
+  form: UseFormReturn<TFormData>;
 }
 
-export const AuthField = ({
+export const AuthField = <TFormData extends FieldValues>  ({
   form,
   label,
   name,
   type,
-  required,
+  required = false,
   placeholder,
-}: AuthFieldProps) => {
+}: AuthFieldProps<TFormData>) => {
   return (
     <div className="grid gap-3">
       <FormField

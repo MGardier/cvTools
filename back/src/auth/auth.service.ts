@@ -21,6 +21,8 @@ import { SignInDto } from './dto/sign-in.dto';
 import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
 import { ConfirmAccountDto } from './dto/confirm-account.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ErrorCode } from 'nats';
+import { ErrorCodeEnum } from 'src/enums/error-codes.enum';
 
 
 //Todo : rajouter les codes d'erreurs pour les messages 
@@ -152,9 +154,10 @@ export class AuthService {
 
   async sendConfirmAccount(
     email: string,
-  ): Promise<boolean> {
+    userSelectedColumn?: (keyof User)[]
+  ): Promise<Pick<User, "id" | "email" | "status">> {
 
-    const user = await this.userService.findOneByEmail(email, ['id', 'status']);
+    const user = await this.userService.findOneByEmail(email, userSelectedColumn);
     if (!user?.id || !user?.status)
       throw new NotFoundException();
 
@@ -165,10 +168,10 @@ export class AuthService {
 
     await this.emailService.sendAccountConfirmationLink(
       email,
-      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${userToken.token}`,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}?token=${userToken.token}`,
     );
 
-    return true;
+    return user as Pick<User, "id" | "email" | "status">;
   }
 
 
@@ -181,10 +184,10 @@ export class AuthService {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       confirmAccountDto.token,
       TokenType.CONFIRM_ACCOUNT,
-      ['id']
+      ['id','token']
     );
     if (!userToken.id || !payload.sub)
-      throw new NotFoundException();
+      throw new NotFoundException(ErrorCodeEnum.TOKEN_EXPIRED);
 
     const user = await this.userService.update(payload.sub, {
       status: UserStatus.ALLOWED,
@@ -209,7 +212,7 @@ export class AuthService {
 
       await this.emailService.sendResetPasswordLink(
         user.email!,
-        `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${userToken.token}`,
+        `${this.configService.get('FRONT_URL_RESET_PASSWORD')}?token=${userToken.token}`,
       );
     }
 
@@ -221,7 +224,7 @@ export class AuthService {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       data.token,
       TokenType.FORGOT_PASSWORD,
-      ['id']
+      ['id','token']
     );
 
     if (!userToken.id) throw new NotFoundException();

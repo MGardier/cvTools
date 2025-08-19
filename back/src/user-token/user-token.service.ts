@@ -5,11 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { TokenType } from './enum/token-type.enum';
 import { UserTokenRepository } from './user-token.repository';
 import { GenerateJwtOutputInterface } from 'src/jwt-manager/interfaces/generate-jwt-output.interface';
-import { UtilRepository } from 'src/shared/utils/UtilRepository';
+import { UtilRepository } from 'src/utils/UtilRepository';
 import { PayloadJwtInterface } from 'src/jwt-manager/interfaces/payload-jwt.interface';
 import { User, UserToken } from '@prisma/client';
 import { DecodeAndGetUserTokenOutput } from './interfaces/decode-and-get-user-token.output';
-import { UtilDate } from 'src/shared/utils/UtilDate';
+import { UtilDate } from 'src/utils/UtilDate';
 
 
 @Injectable()
@@ -63,15 +63,14 @@ export class UserTokenService {
       token,
       type,
     );
-    
+
     if (!payload.uuid)
       throw new UnauthorizedException();
 
-    const requiredColumns: (keyof UserToken)[] = ['token'];
-    const finalSelectedColumns =  UtilRepository.addColumnsToSelectedColumns<UserToken>(requiredColumns, selectedColumn)
 
-    const userToken = await this.userTokenRepository.findByUuid(payload.uuid, finalSelectedColumns);
-
+    const userToken = await this.userTokenRepository.findByUuid(payload.uuid, selectedColumn);
+    console.log(userToken)
+    console.log(token)
     if (userToken?.token !== token)
       throw new UnauthorizedException();
 

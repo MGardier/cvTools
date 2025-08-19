@@ -1,9 +1,11 @@
-import { SignUpForm } from "@/features/auth/components/signUp/sign-up-form";
+import { AuthLayout } from "@/features/auth/components/auth-layout";
+import { SignUpForm } from "@/features/auth/components/form/sign-up-form";
+
 
 export function SignUpPage() {
   return (
-    <div className="container mx-auto py-10 flex flex-col justify-center items-center">
+    <AuthLayout>
       <SignUpForm />
-    </div>
+    </AuthLayout>
   );
 }

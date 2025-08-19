@@ -1,8 +1,8 @@
 import {
-  BadGatewayException,
   Body,
   Controller,
   Delete,
+  Patch,
   Post,
   Req,
 } from '@nestjs/common';
@@ -36,8 +36,6 @@ export class AuthController {
   async signUp(
     @Body() signUpDto: SignUpDto,
   ): Promise<Pick<User, "id" | 'email'>> {
-  
-    throw new BadGatewayException()
     
     return await this.authService.signUp(signUpDto, ["id", "email"]);
   }
@@ -66,24 +64,23 @@ export class AuthController {
   async refresh(@Req() request: Request) : Promise<SignInOutputInterface> {
     const token = request['token'];
     return await this.authService.refresh(token);
-
   }
 
-  // /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
+  /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
 
   @Public()
   @Post('sendConfirmAccount')
   async sendConfirmAccount(
     @Body() sendConfirmAccountDto: ForgotPasswordDTO,
-  ): Promise<boolean> {
+  ): Promise<Pick<User, "id" | "email" | "status">> {
 
-    return await this.authService.sendConfirmAccount(sendConfirmAccountDto.email);
+    return await this.authService.sendConfirmAccount(sendConfirmAccountDto.email, ['id', 'email','status']);
 
   }
 
 
   @Public()
-  @Post('confirmAccount')
+  @Patch('confirmAccount')
   async confirmAccount(
     @Body() confirmAccountDto: ConfirmAccountDto,
   ): Promise<Boolean> {
@@ -101,7 +98,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('resetPassword')
+  @Patch('resetPassword')
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<Boolean> {
