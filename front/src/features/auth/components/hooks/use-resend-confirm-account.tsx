@@ -13,8 +13,8 @@ import { createSendConfirmAccountSchema } from "../../schema/auth-schema";
 
 import type { UseSendConfirmReturn } from "../../types/hook";
 import type { ApiErrors, SendConfirmAccountResponse } from "../../types/api";
-import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/data/routes";
+import { useState } from "react";
+
 
 
 
@@ -22,9 +22,9 @@ import { ROUTES } from "@/data/routes";
 
 export const useSendConfirmAccount = (defaultEmail: string | null): UseSendConfirmReturn => {
 
-
+  const [email,setEmail] = useState(defaultEmail);
   const { t } = useTranslation('auth');
-  const navigate = useNavigate();
+
 
   const schema = createSendConfirmAccountSchema(t);
   const defaultValues = {
@@ -38,12 +38,13 @@ export const useSendConfirmAccount = (defaultEmail: string | null): UseSendConfi
   const mutation= useMutation<SendConfirmAccountResponse,ApiErrors,z.infer<typeof schema>>({
     mutationFn: authService.sendConfirmAccount,
     onSuccess: (response)=>{
-      toast.success(t("api.success.confirmAccount.sendEmail"))
-      navigate(`/${ROUTES.auth.confirmAccount}?email=${response.data.email}`)
+      toast.success(t("messages.success.sendConfirmAccount.short"))
+      setEmail(response.data.email)
       
     } ,
-    onError: (error)=> {
-      toast.error(t(`apiResponse.${error.message?.toLowerCase()}`,'Une erreur inattendue s\'est produite'))
+    onError: ()=> {
+      toast.error(t(`messages.errors.fallback`))
+      setEmail(null)
     }
   } 
 )
@@ -52,5 +53,5 @@ export const useSendConfirmAccount = (defaultEmail: string | null): UseSendConfi
     mutation.mutate(values)
   };
 
-  return {form, onSubmit, isSuccess: mutation.isSuccess, isPending : mutation.isPending, isError: mutation.isError}
+  return {t,form, email, onSubmit, isSuccess: mutation.isSuccess, isPending : mutation.isPending, isError: mutation.isError}
 }

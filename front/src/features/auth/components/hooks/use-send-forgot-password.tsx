@@ -9,8 +9,9 @@ import type z from "zod";
 import { authService } from "../../auth.service";
 import type { ApiErrors, SendForgotPasswordResponse } from "../../types/api";
 import { ROUTES } from "@/data/routes";
+import type { UseSendForgotPasswordReturn } from "../../types/hook";
 
-export const useSendForgotPassword =  (defaultEmail: string | null)=> {
+export const useSendForgotPassword =  (defaultEmail: string | null): UseSendForgotPasswordReturn=> {
 
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
@@ -27,13 +28,13 @@ export const useSendForgotPassword =  (defaultEmail: string | null)=> {
   const mutation= useMutation<SendForgotPasswordResponse,ApiErrors,z.infer<typeof schema>>({
     mutationFn: authService.sendForgotPassword,
     onSuccess: (response)=>{
-      toast.success(t("api.success.resetPassword.sendEmail"))
+      toast.success(t("messages.success.sendForgotPassword.short"));
       navigate(`/${ROUTES.auth.resetPassword}?email=${response.data.email}`)
       
     } ,
-    onError: (error)=> {
-      toast.error(t(`apiResponse.${error.message?.toLowerCase()}`,'Une erreur inattendue s\'est produite'))
-    }
+    onError: ()=> 
+      toast.error(t("messages.errors.sendForgotPassword"))
+    
   } 
 )
 
@@ -41,5 +42,5 @@ export const useSendForgotPassword =  (defaultEmail: string | null)=> {
     mutation.mutate(values)
   };
 
-  return {form, onSubmit, isSuccess: mutation.isSuccess, isPending : mutation.isPending, isError: mutation.isError}
+  return {t,form, onSubmit, isSuccess: mutation.isSuccess, isPending : mutation.isPending, isError: mutation.isError}
 }

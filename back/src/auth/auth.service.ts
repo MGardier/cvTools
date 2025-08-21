@@ -57,23 +57,23 @@ export class AuthService {
       userSelectedColumn
     );
 
-    const token = await this.userTokenService.generateAndSave(
+    const userToken = await this.userTokenService.generateAndSave(
       { sub: user.id, email: user.email },
       TokenType.CONFIRM_ACCOUNT
     );
 
     await this.emailService.sendAccountConfirmationLink(
       user.email,
-      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${userToken.token}`,
     );
 
     return user;
   }
 
 
-  async signIn(data: SignInDto): Promise<SignInOutputInterface> {
+  async signIn(data: SignInDto,userSelectedColumn?: (keyof User)[]): Promise<SignInOutputInterface> {
 
-    const user = await this.userService.findOneByEmail(data.email, ['id', 'email', 'password', 'status']);
+    const user = await this.userService.findOneByEmail(data.email,userSelectedColumn );
     if (
       !user ||
       !user?.password ||
@@ -103,7 +103,10 @@ export class AuthService {
       ['token']
     );
 
-    return { accessToken: access.token, refreshToken: refresh.token! };
+    const {password,...responseUser} = user;
+
+
+    return { tokens : {accessToken: access.token, refreshToken: refresh.token!}, user: responseUser as  Omit<User,"password"> };
   }
 
 
@@ -145,7 +148,8 @@ export class AuthService {
     const refreshToken = await this.userTokenService.generateAndSave(newPayload, TokenType.REFRESH);
 
     await this.userTokenService.remove(userToken.id);
-    return { accessToken: accessToken.token, refreshToken: refreshToken.token! };
+    const {password,...responseUser} = user;
+    return { tokens:{accessToken: accessToken.token, refreshToken: refreshToken.token!}, user: responseUser as  Omit<User,"password">};
   }
 
   // /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */

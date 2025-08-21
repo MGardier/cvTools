@@ -10,10 +10,18 @@ export interface SignUpData {
 
 
 
+/**************** SIGN IN *********************************************/
+
+export interface SignInData extends Omit<SignUpData,"confirmPassword">{
+
+}
+
+
+
 /**************** CONFIRM  ACCOUNT *********************************************/
 
-export interface SendConfirmAccountData {
-  email: string;
+export interface SendConfirmAccountData extends Pick<SignUpData,"email"> {
+ 
 }
 
 export interface ConfirmAccountData {
@@ -24,14 +32,14 @@ export interface ConfirmAccountData {
 
 /**************** RESET  PASSWORD *********************************************/
 
-export interface SendForgotPasswordData {
-  email: string;
+export interface SendForgotPasswordData extends Pick<SignUpData,"email"> {
+  
 }
 
 
-export interface ResetPasswordData {
-  password: string;
-  token:string;
+export interface ResetPasswordData extends Pick<SignUpData,"password">{
+
+
 }
 
 

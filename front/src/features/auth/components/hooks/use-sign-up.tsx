@@ -37,13 +37,12 @@ export const useSignUp = (): UseSignUpReturn => {
   const mutation = useMutation<SignUpResponse, ApiErrors, z.infer<typeof schema>>({
     mutationFn: authService.signUp,
     onSuccess :(response)=> {
-
-      toast.success(t("api.success.signUp"))
-      navigate(`/${ROUTES.auth.confirmAccount}/${response.data.email}`)
+      toast.success(t("messages.success.signUp.short"))
+      navigate(`/${ROUTES.auth.confirmAccount}?email=${response.data.email}`)
       
     },
     onError: (error)=> {
-      toast.error(t(`api.error.${error.message?.toLowerCase()}`,'Une erreur inattendue s\'est produite'))
+      toast.error(t(`messages.errors.api.${error.message}.short`,t('messages.errors.fallback')))
     }
   } 
 )
@@ -52,5 +51,5 @@ export const useSignUp = (): UseSignUpReturn => {
     mutation.mutate(values)
   };
 
-  return {form, onSubmit, isPending : mutation.isPending}
+  return {t, error: mutation.error ,form, onSubmit, isError : mutation.isError, isPending : mutation.isPending}
 }

@@ -64,13 +64,12 @@ export class UserTokenService {
       type,
     );
 
+
     if (!payload.uuid)
       throw new UnauthorizedException();
 
 
     const userToken = await this.userTokenRepository.findByUuid(payload.uuid, selectedColumn);
-    console.log(userToken)
-    console.log(token)
     if (userToken?.token !== token)
       throw new UnauthorizedException();
 

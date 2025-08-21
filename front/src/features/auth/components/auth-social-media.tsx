@@ -1,8 +1,11 @@
 import { GitHubLogo } from "@/components/logo/github-logo";
 import { GoogleLogo } from "@/components/logo/google-logo";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 export const AuthSocialMedia = () => {
+
+    const { t } = useTranslation('auth');
   return (
     <div className="flex  lg:flex-row  md:flex-row flex-col  gap-4 items-center justify-center">
       <Button
@@ -11,7 +14,7 @@ export const AuthSocialMedia = () => {
         size="form"
       >
         <GitHubLogo size={22} />
-        Connexion avec Github
+         {t("pages.socialMedia.github")}
       </Button>
       <Button
         variant="outline"
@@ -19,7 +22,7 @@ export const AuthSocialMedia = () => {
         size="form"
       >
         <GoogleLogo size={22} />
-        Connexion avec Google
+         {t("pages.socialMedia.google")}
       </Button>
     </div>
   );

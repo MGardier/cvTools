@@ -2,8 +2,8 @@
 
 import { authApi } from "./auth.api";
 
-import type { ConfirmAccountResponse, ResetPasswordParams, ResetPasswordResponse, SendConfirmAccountResponse, SendForgotPasswordResponse, SignUpResponse } from "./types/api";
-import type { ConfirmAccountData, SendConfirmAccountData, SendForgotPasswordData, SignUpData } from "./types/form";
+import type { ConfirmAccountResponse, LogoutResponse, ResetPasswordParams, ResetPasswordResponse, SendConfirmAccountResponse, SendForgotPasswordResponse, SignInResponse, SignUpResponse } from "./types/api";
+import type { ConfirmAccountData, SendConfirmAccountData, SendForgotPasswordData, SignInData, SignUpData } from "./types/form";
 
 
 export const authService = {
@@ -14,6 +14,23 @@ export const authService = {
     const params = { email: data.email, password: data.password };
     return await authApi.signUp(params);
   },
+
+
+  /**************** SIGNIN ************************************************************/
+
+  async signIn(data: SignInData): Promise<SignInResponse> {
+    const params = { email: data.email, password: data.password };
+    return await authApi.signIn(params);
+  },
+
+  /**************** LOGOUT ************************************************************/
+
+  async logout(): Promise<LogoutResponse> {
+    return await authApi.logout();
+  },
+
+
+
 
   /****************  CONFIRM ACCOUNT ************************************************************/
 
@@ -26,9 +43,6 @@ export const authService = {
     const params = { token: data.token };
     return await authApi.confirmAccount(params);
   },
-
-
-  /**************** SIGNIN ************************************************************/
 
 
   /****************  RESET PASSWORD ************************************************************/

@@ -1,6 +1,6 @@
 
 import { apiClient } from '@/api/axios';
-import type { ConfirmAccountParams, ConfirmAccountResponse, ResetPasswordParams, ResetPasswordResponse, SendConfirmAccountParams, SendConfirmAccountResponse,  SendForgotPasswordParams,  SendForgotPasswordResponse,  SignUpParams, SignUpResponse } from './types/api';
+import type { ConfirmAccountParams, ConfirmAccountResponse, LogoutResponse, ResetPasswordParams, ResetPasswordResponse, SendConfirmAccountParams, SendConfirmAccountResponse, SendForgotPasswordParams, SendForgotPasswordResponse, SignInParams, SignInResponse, SignUpParams, SignUpResponse } from './types/api';
 
 
 
@@ -11,12 +11,27 @@ const ENDPOINT = '/auth';
 export const authApi = {
 
 
-/**************** SIGNUP ************************************************************/
+  /**************** SIGN UP ************************************************************/
 
-  async signUp(params: SignUpParams) : Promise<SignUpResponse> {
+  async signUp(params: SignUpParams): Promise<SignUpResponse> {
     return await apiClient.post(`${ENDPOINT}/signUp`, params);
   },
 
+  /**************** SIGN IN ************************************************************/
+
+  async signIn(params: SignInParams): Promise<SignInResponse> {
+    return await apiClient.post(`${ENDPOINT}/signIn`, params);
+  },
+
+
+  /**************** LOGOUT ************************************************************/
+
+  async logout(): Promise<LogoutResponse> {
+    return await apiClient.delete(`${ENDPOINT}/logout`);
+  },
+
+
+ 
 
   /****************  CONFIRM ACCOUNT *********************************************/
 
@@ -29,8 +44,8 @@ export const authApi = {
   },
 
 
-  
-/**************** RESET PASSWORD ************************************************************/
+
+  /**************** RESET PASSWORD ************************************************************/
 
   async sendForgotPassword(params: SendForgotPasswordParams): Promise<SendForgotPasswordResponse> {
     return await apiClient.post(`${ENDPOINT}/forgotPassword`, params);

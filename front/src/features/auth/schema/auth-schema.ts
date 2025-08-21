@@ -6,27 +6,26 @@ import z from "zod";
 
 /**************** SIGNUP *********************************************/
 
-export const createSignUpSchema = (t: TFunction<'auth/errors', undefined>) => {
+export const createSignUpSchema = (t: TFunction<'auth', undefined>) => {
  
 
   return z.object({
 
     //EMAIL
-
     email:
-      z.email({ message: t('errors.validation.email.invalid') }),
+      z.email({ message: t('validation.email.invalid') }),
 
     //PASSWORD
     password:
-      z.string({ message: t('errors.validation.password.invalid') })
-        .min(8, { message: t('errors.validation.password.minLength') })
-        .regex(REGEX_PASSWORD, { message: t('errors.validation.password.invalid') }),
+      z.string({ message: t('validation.password.invalid') })
+        .min(8, { message: t('validation.password.minLength') })
+        .regex(REGEX_PASSWORD, { message: t('validation.password.invalid') }),
 
     //CONFIRM PASSWORD
     confirmPassword:
-      z.string({ message: t('errors.validation.confirmPassword.invalid') })
-        .min(8, { message: t('errors.validation.confirmPassword.minLength') })
-        .regex(REGEX_PASSWORD, { message: t('errors.validation.confirmPassword.invalid') }),
+      z.string({ message: t('validation.confirmPassword.invalid') })
+        .min(8, { message: t('validation.confirmPassword.minLength') })
+        .regex(REGEX_PASSWORD, { message: t('validation.confirmPassword.invalid') }),
   })
 
     // CUSTOM VALIDATION
@@ -41,11 +40,11 @@ export const createSignUpSchema = (t: TFunction<'auth/errors', undefined>) => {
 
 /****************  CONFIRM ACCOUNT *********************************************/
 
-export const createSendConfirmAccountSchema = (t: TFunction<'auth/errors', undefined>) => {
+export const createSendConfirmAccountSchema = (t: TFunction<'auth', undefined>) => {
   return z.object({
     //EMAIL
     email:
-      z.email({ message: t('errors.validation.email.invalid') }),
+      z.email({ message: t('validation.email.invalid') }),
   })
 }
 
@@ -53,8 +52,8 @@ export const createSendConfirmAccountSchema = (t: TFunction<'auth/errors', undef
 
 /**************** SIGNIN *********************************************/
 
-export const createSignInSchema = (t: TFunction<'auth/errors', undefined>) => {
-  const regexPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
+export const createSignInSchema = (t: TFunction<'auth', undefined>) => {
+ 
 
   return z.object({
 
@@ -66,7 +65,7 @@ export const createSignInSchema = (t: TFunction<'auth/errors', undefined>) => {
     password:
       z.string({ message: t('validation.password.invalid') })
         .min(8, { message: t('validation.password.minLength') })
-        .regex(regexPassword, { message: t('validation.password.invalid') }),
+        .regex(REGEX_PASSWORD, { message: t('validation.password.invalid') }),
   })
 }
 
@@ -74,16 +73,16 @@ export const createSignInSchema = (t: TFunction<'auth/errors', undefined>) => {
 
 /****************  RESET PASSWORD *********************************************/
 
-export const createSendForgotPasswordSchema = (t: TFunction<'auth/errors', undefined>) => {
+export const createSendForgotPasswordSchema = (t: TFunction<'auth', undefined>) => {
   return z.object({
     //EMAIL
     email:
-      z.email({ message: t('errors.validation.email.invalid') }),
+      z.email({ message: t('validation.email.invalid') }),
   })
 }
 
 
-export const createResetPasswordSchema = (t: TFunction<'auth/errors', undefined>) => {
+export const createResetPasswordSchema = (t: TFunction<'auth', undefined>) => {
   return z.object({
   
     password:

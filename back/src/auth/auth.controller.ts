@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  HttpCode,
   Patch,
   Post,
   Req,
@@ -45,7 +46,7 @@ export class AuthController {
   async signIn(
     @Body() signInDto: SignInDto,
   ): Promise<SignInOutputInterface> {
-    return await this.authService.signIn(signInDto);
+    return await this.authService.signIn(signInDto,['id', 'email', 'password', 'status', 'roles']);
 
   }
 
@@ -60,6 +61,7 @@ export class AuthController {
   }
 
   @Token_Type(TokenType.REFRESH)
+  @HttpCode(201)
   @Post('refresh')
   async refresh(@Req() request: Request) : Promise<SignInOutputInterface> {
     const token = request['token'];

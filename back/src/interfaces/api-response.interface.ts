@@ -2,7 +2,7 @@
 export interface ApiResponseInterface <T = any> {
   
   success: boolean;
-  statusCode : number;
+  status : number;
   message?: string;
   data? : T
   timestamp: string;

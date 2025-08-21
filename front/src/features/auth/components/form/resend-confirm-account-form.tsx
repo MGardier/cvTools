@@ -12,36 +12,49 @@ export interface ReSendConfirmAccountFormProps {
 export const ReSendConfirmAccountForm = ({
   defaultEmail,
 }: ReSendConfirmAccountFormProps) => {
-  const { form, onSubmit, isError, isPending } =
-    useSendConfirmAccount(defaultEmail);
 
+
+  const { t, email, form, onSubmit, isSuccess, isError, isPending } =
+    useSendConfirmAccount(defaultEmail);
   return (
     <Card className="border-0 shadow-none w-full max-w-sm md:max-w-md lg:max-w-lg">
-      <AuthCardHeader title="Renvoyer un email de confirmation">
+      <AuthCardHeader title={t("pages.confirmAccount.title")}>
+
+        {/** For user who come from signUp and successfully create her account */}
+        {defaultEmail && !isSuccess && !isError && (
+          <div className="text-green-700 mt-4 flex items-center justify-center gap-2">
+            <CheckCircleIcon className="size-4 text-green-600" />
+            <p>
+                {`${t("pages.confirmAccount.success.emailSendAt")} `}<b>{email}</b>.
+            </p>
+          </div>
+        )}
+
         {isError && (
           <div className="text-red-700 mt-4 flex items-center justify-center gap-2">
             <CheckCircleIcon className="size-4 text-red-600" />
             <p>
-              <b>Le lien de confirmation n'est pas valide ou a expiré.</b>.
+              <b>{t("pages.confirmAccount.errors.sendingEmailFailed")}</b>.
             </p>
           </div>
         )}
-        {Boolean(defaultEmail) && (
+
+        {isSuccess && (
           <div className="text-green-700 mt-4 flex items-center justify-center gap-2">
             <CheckCircleIcon className="size-4 text-green-600" />
             <p>
-              Un nouvel email été envoyé à l'adresse <b>{defaultEmail}</b>.
+              {`${t("pages.confirmAccount.success.emailResendAt")} `}<b>{email}</b>.
             </p>
           </div>
         )}
       </AuthCardHeader>
       <AuthCardContent
-        {...{ onSubmit, form, labelButton: "Renvoyer", isLoading: isPending }}
+        {...{ onSubmit, form, labelButton: t("pages.confirmAccount.form.button"), isLoading: isPending }}
       >
         <div className="grid gap-6">
           {/** EMAIL  */}
           <AuthField
-            label="Email"
+            label={t("pages.confirmAccount.form.email")}
             name="email"
             type="email"
             placeholder="john.doe@example.com"

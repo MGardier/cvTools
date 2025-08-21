@@ -4,18 +4,18 @@
 
 import type { User } from "@/types/entity";
 
-export interface ApiResponse  {
-  
+export interface ApiResponse {
+
   success: boolean;
-  statusCode : number;
+  statusCode: number;
   message?: string;
   timestamp: string;
   path: string;
-  
+
 }
 
 
-export interface ApiErrors extends ApiResponse{
+export interface ApiErrors extends ApiResponse {
 
 }
 
@@ -27,8 +27,34 @@ export interface SignUpParams {
   password: string;
 }
 
-export interface SignUpResponse  extends ApiResponse{
-  data: Pick<User,"id" |"email">
+
+
+
+export interface SignUpResponse extends ApiResponse {
+  data: Pick<User, "id" | "email">
+}
+
+/************************************************** SIGN UP ********************************/
+export interface SignInParams extends SignUpParams {
+
+}
+
+export interface SignInResponse extends ApiResponse {
+  data: {
+    tokens: {
+      accessToken: string;
+      refreshToken: string;
+    }
+    user: User
+
+  }
+}
+
+
+/************************************************** LOGOUT ********************************/
+
+export interface LogoutResponse extends ApiResponse {
+  data: null
 }
 
 
@@ -38,8 +64,8 @@ export interface SendConfirmAccountParams {
 }
 
 
-export interface SendConfirmAccountResponse  extends ApiResponse{
-  data: Pick<User,"id" | "email" | "status">
+export interface SendConfirmAccountResponse extends ApiResponse {
+  data: Pick<User, "id" | "email" | "status">
 }
 
 
@@ -48,8 +74,8 @@ export interface ConfirmAccountParams {
 }
 
 
-export interface ConfirmAccountResponse  extends ApiResponse{
-  data: Pick<User,"id" | "email" | "status">
+export interface ConfirmAccountResponse extends ApiResponse {
+  data: Pick<User, "id" | "email" | "status">
 }
 
 /************************************************** RESET PASSWORD ********************************/
@@ -58,8 +84,8 @@ export interface SendForgotPasswordParams {
   email: string;
 }
 
-export interface SendForgotPasswordResponse  extends ApiResponse{
-  data: Pick<User,"id" |"email">
+export interface SendForgotPasswordResponse extends ApiResponse {
+  data: Pick<User, "id" | "email">
 }
 
 
@@ -68,7 +94,7 @@ export interface ResetPasswordParams {
   token: string;
 }
 
-export interface ResetPasswordResponse  extends ApiResponse{
+export interface ResetPasswordResponse extends ApiResponse {
   data: null
 }
 

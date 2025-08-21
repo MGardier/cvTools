@@ -13,7 +13,8 @@ import { Header } from "./components/header/header";
 import { ROUTES } from "./data/routes";
 import { ConfirmAccountPage } from "./pages/auth/confirm-account-page";
 import { ResetPasswordPage } from "./pages/auth/reset-password-page";
-
+import { SignInPage } from "./pages/auth/sign-in-page";
+import { LogoutPage } from "./pages/auth/logout-page";
 
 function App() {
   const queryClient = new QueryClient();
@@ -25,22 +26,43 @@ function App() {
         <ToastContainer />
         <BrowserRouter>
           <Routes>
-            
             {/* HOME */}
             <Route key="home" path={ROUTES.home} element={<HomePage />} />
 
             {/* SIGNUP */}
-            <Route key="signUp" path={ROUTES.auth.signUp} element={<SignUpPage />} />
+            <Route
+              key="signUp"
+              path={ROUTES.auth.signUp}
+              element={<SignUpPage />}
+            />
 
             {/* CONFIRM ACCOUNT */}
-            <Route key="confirmAccount" path={ROUTES.auth.confirmAccount}  element={<ConfirmAccountPage />} />
+            <Route
+              key="confirmAccount"
+              path={ROUTES.auth.confirmAccount}
+              element={<ConfirmAccountPage />}
+            />
 
             {/*  RESET PASSWORD */}
-            <Route key="resetPassword" path={ROUTES.auth.resetPassword}  element={<ResetPasswordPage />} />
+            <Route
+              key="resetPassword"
+              path={ROUTES.auth.resetPassword}
+              element={<ResetPasswordPage />}
+            />
 
             {/* SIGNIN */}
-            {/* <Route key="signIn" path={ROUTES.auth.signIn}  element={<SignInPage />} /> */}
+            <Route
+              key="signIn"
+              path={ROUTES.auth.signIn}
+              element={<SignInPage />}
+            />
 
+            {/* LOGOUT */}
+            <Route
+              key="logout"
+              path={ROUTES.auth.logout}
+              element={<LogoutPage />}
+            />
           </Routes>
         </BrowserRouter>
       </main>
@@ -52,4 +74,4 @@ function App() {
   );
 }
 
- export default App;
+export default App;

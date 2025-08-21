@@ -3,9 +3,9 @@ export const ROUTES = {
   auth: {
 
     /* AUTH */
-    signUp: "/signup",
-    signIn: "/signin",
-    logout: "",
+    signUp: "/sign-up",
+    signIn: "/sign-in",
+    logout: "/logout",
 
     /* CONFIRM ACCOUNT */
     confirmAccount :"confirm-account",

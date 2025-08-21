@@ -12,28 +12,28 @@ export interface ResetPasswordFormProps {
 export const ResetPasswordForm = ({
   token,
 }: ResetPasswordFormProps) => {
-  const { form, onSubmit, isError, isPending } =
+  const { t,form, onSubmit, isError, isPending } =
     useResetPassword(token);
 
   return (
     <Card className="border-0 shadow-none w-full max-w-sm md:max-w-md lg:max-w-lg">
-      <AuthCardHeader title="Changer son mot de passe">
+      <AuthCardHeader title={t("pages.resetPassword.title")}>
         {isError && (
           <div className="text-red-700 mt-4 flex items-center justify-center gap-2">
             <CheckCircleIcon className="size-4 text-red-600" />
             <p>
-              <b>Une erreur est survenue.</b>.
+              <b>{t("pages.resetPassword.errors.resetFailed")}</b>.
             </p>
           </div>
         )}
       </AuthCardHeader>
       <AuthCardContent
-        {...{ onSubmit, form, labelButton: "Envoyer", isLoading: isPending }}
+        {...{ onSubmit, form, labelButton: t("pages.resetPassword.form.button"), isLoading: isPending }}
       >
         <div className="grid gap-6">
           {/** PASSWORD  */}
           <AuthField
-            label="Mot de passe"
+            label={t("pages.resetPassword.form.password")}
             name="password"
             type="password"
             placeholder="••••••••••••"

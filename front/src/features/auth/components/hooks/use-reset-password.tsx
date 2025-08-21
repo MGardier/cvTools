@@ -9,8 +9,9 @@ import type z from "zod";
 import { authService } from "../../auth.service";
 import type { ApiErrors, ResetPasswordResponse } from "../../types/api";
 import { ROUTES } from "@/data/routes";
+import type { UseResetPasswordReturn } from "../../types/hook";
 
-export const useResetPassword = (token: string) => {
+export const useResetPassword = (token: string): UseResetPasswordReturn => {
   const { t } = useTranslation("auth");
   const navigate = useNavigate();
 
@@ -31,17 +32,12 @@ export const useResetPassword = (token: string) => {
     mutationFn: (formData: z.infer<typeof schema>) =>
       authService.resetPassword({ ...formData, token }),
     onSuccess: () => {
-      toast.success(t("api.success.resetPassword.reset"));
+      toast.success(t("messages.success.resetPassword.short"));
       navigate(`/${ROUTES.auth.signIn}`);
     },
-    onError: (error) => {
-      toast.error(
-        t(
-          `apiResponse.${error.message?.toLowerCase()}`,
-          "Une erreur inattendue s'est produite"
-        )
-      );
-    },
+    onError: () => 
+      toast.error(t("messages.errors.resetPassword"))
+    
   });
 
   const onSubmit = (values: z.infer<typeof schema>) => {
@@ -49,6 +45,7 @@ export const useResetPassword = (token: string) => {
   };
 
   return {
+    t,
     form,
     onSubmit,
     isSuccess: mutation.isSuccess,
