@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma, User, UserRoles, UserStatus } from "@prisma/client";
 
 import { SignUpDto } from "src/auth/dto/sign-up.dto";
-import { UtilRepository } from "src/shared/utils/UtilRepository";
+import { UtilRepository } from "src/utils/UtilRepository";
 import { UpdateUserInterface } from "./interfaces/update-user.interface";
 
 @Injectable()

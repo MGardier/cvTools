@@ -4,7 +4,7 @@ import {  Prisma, UserToken } from '@prisma/client';
 
 
 import { CreateUserTokenInterface } from './dto/create-user-token.interface';
-import { UtilRepository } from "src/shared/utils/UtilRepository";
+import { UtilRepository } from "src/utils/UtilRepository";
 
 @Injectable()
 export class UserTokenRepository {

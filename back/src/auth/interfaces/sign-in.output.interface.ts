@@ -1,5 +1,10 @@
+import { User } from "@prisma/client";
 
 export interface SignInOutputInterface {
-  accessToken: string, 
-  refreshToken: string,
+  tokens : {
+  accessToken: string;
+  refreshToken: string;
+  }
+  user : Omit<User,"password">
+
 }

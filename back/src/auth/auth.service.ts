@@ -21,6 +21,8 @@ import { SignInDto } from './dto/sign-in.dto';
 import { SignInOutputInterface } from './interfaces/sign-in.output.interface';
 import { ConfirmAccountDto } from './dto/confirm-account.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ErrorCode } from 'nats';
+import { ErrorCodeEnum } from 'src/enums/error-codes.enum';
 
 
 //Todo : rajouter les codes d'erreurs pour les messages 
@@ -55,23 +57,23 @@ export class AuthService {
       userSelectedColumn
     );
 
-    const token = await this.userTokenService.generateAndSave(
+    const userToken = await this.userTokenService.generateAndSave(
       { sub: user.id, email: user.email },
       TokenType.CONFIRM_ACCOUNT
     );
 
     await this.emailService.sendAccountConfirmationLink(
       user.email,
-      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${token}`,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${userToken.token}`,
     );
 
     return user;
   }
 
 
-  async signIn(data: SignInDto): Promise<SignInOutputInterface> {
+  async signIn(data: SignInDto,userSelectedColumn?: (keyof User)[]): Promise<SignInOutputInterface> {
 
-    const user = await this.userService.findOneByEmail(data.email, ['id', 'email', 'password', 'status']);
+    const user = await this.userService.findOneByEmail(data.email,userSelectedColumn );
     if (
       !user ||
       !user?.password ||
@@ -101,7 +103,10 @@ export class AuthService {
       ['token']
     );
 
-    return { accessToken: access.token, refreshToken: refresh.token! };
+    const {password,...responseUser} = user;
+
+
+    return { tokens : {accessToken: access.token, refreshToken: refresh.token!}, user: responseUser as  Omit<User,"password"> };
   }
 
 
@@ -143,7 +148,8 @@ export class AuthService {
     const refreshToken = await this.userTokenService.generateAndSave(newPayload, TokenType.REFRESH);
 
     await this.userTokenService.remove(userToken.id);
-    return { accessToken: accessToken.token, refreshToken: refreshToken.token! };
+    const {password,...responseUser} = user;
+    return { tokens:{accessToken: accessToken.token, refreshToken: refreshToken.token!}, user: responseUser as  Omit<User,"password">};
   }
 
   // /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
@@ -152,9 +158,10 @@ export class AuthService {
 
   async sendConfirmAccount(
     email: string,
-  ): Promise<boolean> {
+    userSelectedColumn?: (keyof User)[]
+  ): Promise<Pick<User, "id" | "email" | "status">> {
 
-    const user = await this.userService.findOneByEmail(email, ['id', 'status']);
+    const user = await this.userService.findOneByEmail(email, userSelectedColumn);
     if (!user?.id || !user?.status)
       throw new NotFoundException();
 
@@ -165,10 +172,10 @@ export class AuthService {
 
     await this.emailService.sendAccountConfirmationLink(
       email,
-      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}/${userToken.token}`,
+      `${this.configService.get('FRONT_URL_CONFIRMATION_ACCOUNT')}?token=${userToken.token}`,
     );
 
-    return true;
+    return user as Pick<User, "id" | "email" | "status">;
   }
 
 
@@ -181,10 +188,10 @@ export class AuthService {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       confirmAccountDto.token,
       TokenType.CONFIRM_ACCOUNT,
-      ['id']
+      ['id','token']
     );
     if (!userToken.id || !payload.sub)
-      throw new NotFoundException();
+      throw new NotFoundException(ErrorCodeEnum.TOKEN_EXPIRED);
 
     const user = await this.userService.update(payload.sub, {
       status: UserStatus.ALLOWED,
@@ -192,6 +199,7 @@ export class AuthService {
 
     await this.userTokenService.remove(userToken.id);
     return true;
+    
   }
 
   async forgotPassword(email: string): Promise<Boolean> {
@@ -208,7 +216,7 @@ export class AuthService {
 
       await this.emailService.sendResetPasswordLink(
         user.email!,
-        `${this.configService.get('FRONT_URL_RESET_PASSWORD')}/${userToken.token}`,
+        `${this.configService.get('FRONT_URL_RESET_PASSWORD')}?token=${userToken.token}`,
       );
     }
 
@@ -220,7 +228,7 @@ export class AuthService {
     const { userToken, payload } = await this.userTokenService.decodeAndGet(
       data.token,
       TokenType.FORGOT_PASSWORD,
-      ['id']
+      ['id','token']
     );
 
     if (!userToken.id) throw new NotFoundException();

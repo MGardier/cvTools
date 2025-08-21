@@ -33,7 +33,8 @@ export class AuthGuard implements CanActivate {
       if (tokenType === 'REFRESH') request['token'] = token;
 
       return true;
-    } catch {
+    } catch (e){
+
       throw new UnauthorizedException();
     }
   }

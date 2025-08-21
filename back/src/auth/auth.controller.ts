@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Delete,
+  HttpCode,
+  Patch,
   Post,
   Req,
 } from '@nestjs/common';
@@ -20,7 +22,7 @@ import { TokenType } from 'src/user-token/enum/token-type.enum';
 
 
 
-
+//TODO : void to boolean 
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -35,7 +37,7 @@ export class AuthController {
   async signUp(
     @Body() signUpDto: SignUpDto,
   ): Promise<Pick<User, "id" | 'email'>> {
-
+    
     return await this.authService.signUp(signUpDto, ["id", "email"]);
   }
 
@@ -44,7 +46,7 @@ export class AuthController {
   async signIn(
     @Body() signInDto: SignInDto,
   ): Promise<SignInOutputInterface> {
-    return await this.authService.signIn(signInDto);
+    return await this.authService.signIn(signInDto,['id', 'email', 'password', 'status', 'roles']);
 
   }
 
@@ -59,28 +61,28 @@ export class AuthController {
   }
 
   @Token_Type(TokenType.REFRESH)
+  @HttpCode(201)
   @Post('refresh')
   async refresh(@Req() request: Request) : Promise<SignInOutputInterface> {
     const token = request['token'];
     return await this.authService.refresh(token);
-
   }
 
-  // /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
+  /* ----------  ACCOUNT MANAGEMENT ------------------------------------------------------- */
 
   @Public()
   @Post('sendConfirmAccount')
   async sendConfirmAccount(
     @Body() sendConfirmAccountDto: ForgotPasswordDTO,
-  ): Promise<boolean> {
+  ): Promise<Pick<User, "id" | "email" | "status">> {
 
-    return await this.authService.sendConfirmAccount(sendConfirmAccountDto.email);
+    return await this.authService.sendConfirmAccount(sendConfirmAccountDto.email, ['id', 'email','status']);
 
   }
 
 
   @Public()
-  @Post('confirmAccount')
+  @Patch('confirmAccount')
   async confirmAccount(
     @Body() confirmAccountDto: ConfirmAccountDto,
   ): Promise<Boolean> {
@@ -98,7 +100,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('resetPassword')
+  @Patch('resetPassword')
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<Boolean> {

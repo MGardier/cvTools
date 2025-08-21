@@ -7,7 +7,7 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Response, Request } from 'express';
-import { ApiResponseInterface } from 'src/shared/interfaces/api-response.interface';
+import { ApiResponseInterface } from 'src/interfaces/api-response.interface';
 
 
 
@@ -23,17 +23,17 @@ export class ResponseInterceptor<T> implements NestInterceptor {
   
     
     return next.handle().pipe(
-      map((data) => this.transformResponse(data, request.url)),
+      map((data) => this.transformResponse(data, request.url, response?.statusCode )),
 
     );
   }
 
 
-  private transformResponse(data, path): ApiResponseInterface{
+  private transformResponse(data, path, status): ApiResponseInterface{
 
     return {
       data, 
-      statusCode : 200,
+      status : status || 200,
       success : true,
       timestamp:  new Date().toISOString(),
       path
